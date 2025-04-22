@@ -1,0 +1,304 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --background: 0 0% 100%;
+  --foreground: 222.2 84% 4.9%;
+  --card: 0 0% 100%;
+  --card-foreground: 222.2 84% 4.9%;
+  --popover: 0 0% 100%;
+  --popover-foreground: 222.2 84% 4.9%;
+  --primary: 222.2 47.4% 11.2%;
+  --primary-foreground: 210 40% 98%;
+  --secondary: 210 40% 96.1%;
+  --secondary-foreground: 222.2 47.4% 11.2%;
+  --muted: 210 40% 96.1%;
+  --muted-foreground: 215.4 16.3% 46.9%;
+  --accent: 210 40% 96.1%;
+  --accent-foreground: 222.2 47.4% 11.2%;
+  --destructive: 0 84.2% 60.2%;
+  --destructive-foreground: 210 40% 98%;
+  --border: 214.3 31.8% 91.4%;
+  --input: 214.3 31.8% 91.4%;
+  --ring: 222.2 84% 4.9%;
+  --radius: 0.5rem;
+}
+
+.dark {
+  --background: 222.2 84% 4.9%;
+  --foreground: 210 40% 98%;
+  --card: 222.2 84% 4.9%;
+  --card-foreground: 210 40% 98%;
+  --popover: 222.2 84% 4.9%;
+  --popover-foreground: 210 40% 98%;
+  --primary: 210 40% 98%;
+  --primary-foreground: 222.2 47.4% 11.2%;
+  --secondary: 217.2 32.6% 17.5%;
+  --secondary-foreground: 210 40% 98%;
+  --muted: 217.2 32.6% 17.5%;
+  --muted-foreground: 215 20.2% 65.1%;
+  --accent: 217.2 32.6% 17.5%;
+  --accent-foreground: 210 40% 98%;
+  --destructive: 0 62.8% 30.6%;
+  --destructive-foreground: 210 40% 98%;
+  --border: 217.2 32.6% 17.5%;
+  --input: 217.2 32.6% 17.5%;
+  --ring: 212.7 26.8% 83.9%;
+}
+
+body {
+  font-family: var(--font-poppins), sans-serif;
+  background-color: #000;
+  color: #fff;
+  position: relative;
+  overflow: hidden;
+}
+
+/* Font classes */
+.font-space-mono {
+  font-family: var(--font-space-mono), monospace;
+}
+
+/* Stronger glow for BOLD */
+.bold-glow {
+  text-shadow: 0 0 8px rgba(255, 255, 255, 0.7), 0 0 15px rgba(255, 255, 255, 0.5), 0 0 25px rgba(255, 255, 255, 0.3), 0
+    0 40px rgba(255, 255, 255, 0.15);
+  animation: bold-pulse 3s ease-in-out infinite;
+}
+
+@keyframes bold-pulse {
+  0%,
+  100% {
+    text-shadow: 0 0 8px rgba(255, 255, 255, 0.7), 0 0 15px rgba(255, 255, 255, 0.5), 0 0 25px rgba(255, 255, 255, 0.3),
+      0 0 40px rgba(255, 255, 255, 0.15);
+  }
+  50% {
+    text-shadow: 0 0 10px rgba(255, 255, 255, 0.8), 0 0 18px rgba(255, 255, 255, 0.6), 0 0 28px rgba(255, 255, 255, 0.4),
+      0 0 45px rgba(255, 255, 255, 0.25);
+  }
+}
+
+/* Subtler glow for THINGS */
+.things-glow {
+  text-shadow: 0 0 6px rgba(255, 255, 255, 0.5), 0 0 12px rgba(255, 255, 255, 0.3), 0 0 20px rgba(255, 255, 255, 0.2), 0
+    0 30px rgba(255, 255, 255, 0.1);
+  animation: things-pulse 3s ease-in-out infinite;
+}
+
+@keyframes things-pulse {
+  0%,
+  100% {
+    text-shadow: 0 0 6px rgba(255, 255, 255, 0.5), 0 0 12px rgba(255, 255, 255, 0.3), 0 0 20px rgba(255, 255, 255, 0.2),
+      0 0 30px rgba(255, 255, 255, 0.1);
+  }
+  50% {
+    text-shadow: 0 0 8px rgba(255, 255, 255, 0.6), 0 0 15px rgba(255, 255, 255, 0.4), 0 0 22px rgba(255, 255, 255, 0.3),
+      0 0 35px rgba(255, 255, 255, 0.15);
+  }
+}
+
+/* Grayscale glow for BOLD */
+.grayscale-bold-glow {
+  text-shadow: 0 0 8px rgba(0, 0, 0, 0.7), 0 0 15px rgba(0, 0, 0, 0.5), 0 0 25px rgba(0, 0, 0, 0.3), 0 0 40px
+    rgba(0, 0, 0, 0.15);
+  animation: grayscale-bold-pulse 3s ease-in-out infinite;
+}
+
+@keyframes grayscale-bold-pulse {
+  0%,
+  100% {
+    text-shadow: 0 0 8px rgba(0, 0, 0, 0.7), 0 0 15px rgba(0, 0, 0, 0.5), 0 0 25px rgba(0, 0, 0, 0.3), 0 0 40px
+      rgba(0, 0, 0, 0.15);
+  }
+  50% {
+    text-shadow: 0 0 10px rgba(0, 0, 0, 0.8), 0 0 18px rgba(0, 0, 0, 0.6), 0 0 28px rgba(0, 0, 0, 0.4), 0 0 45px
+      rgba(0, 0, 0, 0.25);
+  }
+}
+
+/* Grayscale glow for THINGS */
+.grayscale-things-glow {
+  text-shadow: 0 0 6px rgba(0, 0, 0, 0.5), 0 0 12px rgba(0, 0, 0, 0.3), 0 0 20px rgba(0, 0, 0, 0.2), 0 0 30px
+    rgba(0, 0, 0, 0.1);
+  animation: grayscale-things-pulse 3s ease-in-out infinite;
+}
+
+@keyframes grayscale-things-pulse {
+  0%,
+  100% {
+    text-shadow: 0 0 6px rgba(0, 0, 0, 0.5), 0 0 12px rgba(0, 0, 0, 0.3), 0 0 20px rgba(0, 0, 0, 0.2), 0 0 30px
+      rgba(0, 0, 0, 0.1);
+  }
+  50% {
+    text-shadow: 0 0 8px rgba(0, 0, 0, 0.6), 0 0 15px rgba(0, 0, 0, 0.4), 0 0 22px rgba(0, 0, 0, 0.3), 0 0 35px
+      rgba(0, 0, 0, 0.15);
+  }
+}
+
+/* Vintage Button Styling */
+.vintage-button-wrapper {
+  position: relative;
+  display: inline-block;
+  border-radius: 5px; /* Even less rounded corners */
+  overflow: hidden;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+}
+
+.vintage-button-wrapper::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 4px; /* Slightly smaller shadow */
+  background-color: rgba(0, 0, 0, 0.25);
+  border-bottom-left-radius: 5px;
+  border-bottom-right-radius: 5px;
+  transition: height 0.2s ease;
+}
+
+.vintage-button {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.35rem 0.8rem; /* Smaller padding */
+  background-color: #e8e3c7;
+  /* Add a subtle texture */
+  background-image: url("data:image/png;base64,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");
+  color: #1a1a1a;
+  border-radius: 5px;
+  transition: transform 0.2s ease;
+  /* Add a subtle inner shadow for depth */
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.5);
+  /* Add a subtle border */
+  border: 1px solid rgba(0, 0, 0, 0.1);
+}
+
+.group:hover .vintage-button {
+  transform: translateY(-1px);
+}
+
+.group:active .vintage-button {
+  transform: translateY(1px);
+}
+
+.group:active .vintage-button-wrapper::after {
+  height: 2px;
+}
+
+/* Bottom center fixed position */
+.bottom-center-tab {
+  position: fixed;
+  left: 50%;
+  transform: translateX(-50%);
+  bottom: 2rem;
+  z-index: 50;
+}
+
+/* Occasional flicker animation */
+@keyframes flicker {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  0.1%,
+  0.2% {
+    opacity: 0.8;
+  }
+  0.5%,
+  0.6% {
+    opacity: 0.9;
+  }
+  25.1%,
+  25.2% {
+    opacity: 0.8;
+  }
+  50.5%,
+  50.6% {
+    opacity: 0.9;
+  }
+  75.1%,
+  75.6% {
+    opacity: 0.8;
+  }
+  99.1%,
+  99.2% {
+    opacity: 0.9;
+  }
+}
+
+.animate-flicker {
+  animation: flicker 15s linear infinite;
+}
+
+/* Reduce the static scanline texture intensity */
+.scanline {
+  background: linear-gradient(to bottom, transparent 50%, rgba(255, 255, 255, 0.02) 50%);
+  background-size: 100% 8px;
+  pointer-events: none;
+  opacity: 0.2;
+}
+
+/* CRT vignette effect */
+.crt-overlay {
+  background: radial-gradient(ellipse at center, transparent 60%, rgba(0, 0, 0, 0.4) 100%);
+  pointer-events: none;
+}
+
+/* Make the moving scanline repeat less frequently */
+.moving-scanline {
+  height: 10px;
+  background: linear-gradient(to bottom, transparent, rgba(255, 255, 255, 0.1) 50%, transparent);
+  opacity: 0.5;
+  pointer-events: none;
+  animation: scan 20s linear infinite;
+}
+
+@keyframes scan {
+  0% {
+    top: -10px;
+  }
+  100% {
+    top: 100%;
+  }
+}
+
+/* We'll keep this class for the alt page */
+.gradient-bg {
+  background-image: url("/images/gradient-background.jpeg");
+  background-size: cover;
+  background-position: center;
+}
+
+/* Signature page styles */
+.signature-container {
+  background-color: transparent;
+  overflow: visible;
+}
+
+.download-button {
+  background-color: #333;
+  color: white;
+  padding: 10px 20px;
+  border-radius: 4px;
+  border: none;
+  cursor: pointer;
+  font-family: var(--font-space-mono), monospace;
+  font-size: 14px;
+  transition: background-color 0.2s;
+}
+
+.download-button:hover {
+  background-color: #555;
+}
+
+.download-button:active {
+  background-color: #222;
+}
+
+.download-button:disabled {
+  background-color: #999;
+  cursor: not-allowed;
+}

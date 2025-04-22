@@ -1,0 +1,38 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 32 32">
+  <!-- Dark background -->
+  <rect width="32" height="32" rx="4" fill="#1A1A1A"/>
+  
+  <!-- Glow effects - multiple layers for better glow -->
+  <defs>
+    <filter id="glow1" x="-30%" y="-30%" width="160%" height="160%">
+      <feGaussianBlur stdDeviation="1" result="blur1"/>
+      <feComposite in="SourceGraphic" in2="blur1" operator="over"/>
+    </filter>
+    
+    <filter id="glow2" x="-40%" y="-40%" width="180%" height="180%">
+      <feGaussianBlur stdDeviation="2" result="blur2"/>
+      <feComposite in="SourceGraphic" in2="blur2" operator="over"/>
+    </filter>
+  </defs>
+  
+  <!-- Outer glow -->
+  <text x="50%" y="53%" dominant-baseline="central" text-anchor="middle" 
+        font-family="sans-serif" font-weight="bold" font-size="20" 
+        fill="rgba(232, 227, 199, 0.3)" filter="url(#glow2)" style="font-style: italic;">
+    B
+  </text>
+  
+  <!-- Inner glow -->
+  <text x="50%" y="53%" dominant-baseline="central" text-anchor="middle" 
+        font-family="sans-serif" font-weight="bold" font-size="20" 
+        fill="rgba(232, 227, 199, 0.7)" filter="url(#glow1)" style="font-style: italic;">
+    B
+  </text>
+  
+  <!-- Main letter -->
+  <text x="50%" y="53%" dominant-baseline="central" text-anchor="middle" 
+        font-family="sans-serif" font-weight="bold" font-size="20" 
+        fill="#E8E3C7" style="font-style: italic;">
+    B
+  </text>
+</svg>
