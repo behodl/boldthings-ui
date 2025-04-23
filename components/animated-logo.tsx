@@ -26,10 +26,22 @@ export function AnimatedLogo() {
       >
         <span className={`font-semibold ${glowReady ? "bold-glow" : ""}`}>BOLD</span>
         <span className={`font-semibold ${glowReady ? "things-glow" : ""}`}>THINGS</span>
+        {/* Desktop version - hidden on small screens */}
         <span
-          className="text-xs sm:text-sm md:text-base lg:text-lg xl:text-xl not-italic font-normal tracking-tighter opacity-70 absolute"
+          className="text-xs sm:text-sm md:text-base lg:text-lg xl:text-xl not-italic font-normal tracking-tighter opacity-70 absolute hidden sm:inline-block"
           style={{
             marginLeft: "0.2em",
+            top: "0.5em", // Align with the top of the "S"
+          }}
+        >
+          ™
+        </span>
+
+        {/* Mobile version - only visible on small screens */}
+        <span
+          className="text-xs not-italic font-normal tracking-tighter opacity-70 absolute sm:hidden inline-block"
+          style={{
+            marginLeft: "0.1em",
             top: "0.5em", // Align with the top of the "S"
           }}
         >
