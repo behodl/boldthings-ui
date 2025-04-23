@@ -19,7 +19,7 @@ export function TypewriterText({
   enableGlitch = true,
 }: TypewriterTextProps) {
   const [displayedText, setDisplayedText] = useState("")
-  const [cursorVisible, setCursorVisible] = useState(true)
+  // const [cursorVisible, setCursorVisible] = useState(true)
   const [isTyping, setIsTyping] = useState(false)
   const [isDone, setIsDone] = useState(false)
   const [isGlitching, setIsGlitching] = useState(false)
@@ -88,24 +88,24 @@ export function TypewriterText({
   }, [isTyping, text, speed])
 
   // Blinking cursor effect
-  useEffect(() => {
-    if (!isDone) return
-
-    const cursorInterval = setInterval(() => {
-      setCursorVisible((prev) => !prev)
-    }, 530) // Blink rate
-
-    // Stop blinking after 3 seconds
-    const stopBlinkingTimeout = setTimeout(() => {
-      clearInterval(cursorInterval)
-      setCursorVisible(false)
-    }, 3000)
-
-    return () => {
-      clearInterval(cursorInterval)
-      clearTimeout(stopBlinkingTimeout)
-    }
-  }, [isDone])
+  // useEffect(() => {
+  //   if (!isDone) return
+  //
+  //   const cursorInterval = setInterval(() => {
+  //     setCursorVisible((prev) => !prev)
+  //   }, 530) // Blink rate
+  //
+  //   // Stop blinking after 3 seconds
+  //   const stopBlinkingTimeout = setTimeout(() => {
+  //     clearInterval(cursorInterval)
+  //     setCursorVisible(false)
+  //   }, 3000)
+  //
+  //   return () => {
+  //     clearInterval(cursorInterval)
+  //     clearTimeout(stopBlinkingTimeout)
+  //   }
+  // }, [isDone])
 
   // Sporadic glitch effect after text is loaded
   useEffect(() => {
@@ -178,12 +178,7 @@ export function TypewriterText({
         display: "block",
       }}
     >
-      <span className={`relative inline-block ${getGlitchClass()}`}>
-        {displayedText}
-        {!isDone && (
-          <span className={`inline-block ${cursorVisible ? "opacity-100" : "opacity-0"} transition-opacity`}>|</span>
-        )}
-      </span>
+      <span className={`relative inline-block ${getGlitchClass()}`}>{displayedText}</span>
     </div>
   )
 }
