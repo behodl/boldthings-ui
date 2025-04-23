@@ -20,34 +20,28 @@ export function AnimatedLogo() {
 
   return (
     <FadeIn delay={300} duration={1200} className="relative flex items-center justify-center w-full h-full">
-      <h1
-        className="italic text-5xl sm:text-6xl md:text-7xl lg:text-8xl xl:text-9xl text-white animate-flicker px-4 text-center relative"
-        style={{ fontFamily: "var(--font-poppins), sans-serif" }}
-      >
-        <span className={`font-semibold ${glowReady ? "bold-glow" : ""}`}>BOLD</span>
-        <span className={`font-semibold ${glowReady ? "things-glow" : ""}`}>THINGS</span>
-        {/* Desktop version - hidden on small screens */}
-        <span
-          className="text-xs sm:text-sm md:text-base lg:text-lg xl:text-xl not-italic font-normal tracking-tighter opacity-70 absolute hidden sm:inline-block"
-          style={{
-            marginLeft: "0.2em",
-            top: "0.5em", // Align with the top of the "S"
-          }}
+      <div className="relative inline-block">
+        <h1
+          className="italic text-5xl sm:text-6xl md:text-7xl lg:text-8xl xl:text-9xl text-white animate-flicker px-4 text-center"
+          style={{ fontFamily: "var(--font-poppins), sans-serif" }}
         >
-          ™
-        </span>
-
-        {/* Mobile version - only visible on small screens */}
-        <span
-          className="text-xs not-italic font-normal tracking-tighter opacity-70 absolute sm:hidden inline-block"
-          style={{
-            marginLeft: "0.1em",
-            top: "0.5em", // Align with the top of the "S"
-          }}
-        >
-          ™
-        </span>
-      </h1>
+          <span className={`font-semibold ${glowReady ? "bold-glow" : ""}`}>BOLD</span>
+          <span className={`font-semibold ${glowReady ? "things-glow" : ""} relative`}>THINGS</span>
+          {/* Standalone trademark symbol positioned absolutely */}
+          <span
+            className="absolute opacity-70"
+            style={{
+              fontSize: "0.18em", // Size is good, keeping it the same
+              right: "-0.2em", // Changed from -0.22em to -0.2em to move it slightly closer to the S
+              top: "0.6em", // Keeping the same vertical position as it's good
+              fontStyle: "normal",
+              fontWeight: "normal",
+            }}
+          >
+            ™
+          </span>
+        </h1>
+      </div>
     </FadeIn>
   )
 }
