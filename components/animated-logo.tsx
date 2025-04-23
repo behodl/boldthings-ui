@@ -27,13 +27,13 @@ export function AnimatedLogo() {
         >
           <span className={`font-semibold ${glowReady ? "bold-glow" : ""}`}>BOLD</span>
           <span className={`font-semibold ${glowReady ? "things-glow" : ""} relative`}>THINGS</span>
-          {/* Standalone trademark symbol positioned absolutely */}
+          {/* Trademark symbol with consistent positioning across breakpoints */}
           <span
             className="absolute opacity-70"
             style={{
               fontSize: "0.18em", // Size is good, keeping it the same
-              right: "-0.2em", // Changed from -0.22em to -0.2em to move it slightly closer to the S
-              top: "0.6em", // Keeping the same vertical position as it's good
+              right: "-0.18em", // Adjusted to move it slightly closer to the S
+              top: "0.6em", // Vertical position is good, keeping it the same
               fontStyle: "normal",
               fontWeight: "normal",
             }}
