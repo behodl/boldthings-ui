@@ -14,7 +14,7 @@ interface TypewriterTextProps {
 export function TypewriterText({
   text,
   className = "",
-  speed = 20, // Base typing speed
+  speed = 35, // Base typing speed (increased from 20ms)
   startDelay = 1000,
   enableGlitch = true,
 }: TypewriterTextProps) {

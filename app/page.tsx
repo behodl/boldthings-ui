@@ -41,7 +41,7 @@ export default function Home() {
               <TypewriterText
                 text={metaDescription}
                 className="text-retro-display/80 text-xs md:text-sm font-normal tracking-wide"
-                speed={15} // Faster typing speed
+                speed={35} // Slower typing speed
                 startDelay={1500}
                 enableGlitch={true}
               />
@@ -51,7 +51,7 @@ export default function Home() {
       </main>
 
       {/* Get In Touch Button - Bottom Center Tab with mailto link */}
-      <FadeIn delay={4400} duration={1000} className="group bottom-center-tab">
+      <FadeIn delay={6800} duration={1000} className="group bottom-center-tab">
         <a href="mailto:hello@boldthin.gs" className="block">
           <div className="vintage-button-wrapper">
             <div className="vintage-button">

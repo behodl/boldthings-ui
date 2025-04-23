@@ -35,7 +35,7 @@ export default function AltHome() {
                   <TypewriterText
                     text={metaDescription}
                     className="text-retro-display/80 text-xs md:text-sm font-normal tracking-wide"
-                    speed={15} // Faster typing speed
+                    speed={35} // Slower typing speed
                     startDelay={1500}
                     enableGlitch={true}
                   />
@@ -44,7 +44,7 @@ export default function AltHome() {
             </div>
 
             {/* Contact Form Section */}
-            <FadeIn delay={4400} duration={1000} className="col-span-1">
+            <FadeIn delay={6800} duration={1000} className="col-span-1">
               <ContactForm />
             </FadeIn>
           </div>
