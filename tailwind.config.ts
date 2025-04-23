@@ -112,6 +112,11 @@ const config: Config = {
           "0%": { width: "0" },
           "100%": { width: "100%" },
         },
+        "fade-in-delayed": {
+          "0%": { opacity: "0" },
+          "99%": { opacity: "0" },
+          "100%": { opacity: "1" },
+        },
       },
       animation: {
         "accordion-down": "accordion-down 0.2s ease-out",
@@ -121,6 +126,7 @@ const config: Config = {
         flicker: "flicker 3s linear infinite",
         scanline: "scanline 8s linear infinite",
         typing: "typing 3.5s steps(40, end)",
+        "fade-in-delayed": "fade-in-delayed 7s forwards",
       },
     },
   },

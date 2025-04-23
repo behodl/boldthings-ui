@@ -2,7 +2,7 @@ import { AnimatedLogo } from "@/components/animated-logo"
 import { ExternalLinkIcon } from "@/components/external-link-icon"
 import { FadeInBackground } from "@/components/fade-in-background"
 import { FadeIn } from "@/components/fade-in"
-import { TypewriterText } from "@/components/typewriter-text"
+import { HighlightedTypewriter } from "@/components/highlighted-typewriter"
 
 export default function Home() {
   const metaDescription =
@@ -36,14 +36,17 @@ export default function Home() {
               <AnimatedLogo />
             </div>
 
-            {/* Meta Description with Typewriter Effect - Center aligned */}
+            {/* Meta Description with Typewriter Effect that transitions to highlighted text */}
             <div className="flex items-center justify-center max-w-xl w-full text-center px-4 mt-6">
-              <TypewriterText
+              <HighlightedTypewriter
                 text={metaDescription}
+                wordToHighlight="selective"
                 className="text-retro-display/80 text-xs md:text-sm font-normal tracking-wide"
-                speed={35} // Slower typing speed
-                startDelay={2500} // Increased from 1500ms to 2500ms to ensure background loads first
-                enableGlitch={true}
+                typewriterSpeed={35}
+                typewriterStartDelay={2500}
+                highlightDelay={7500}
+                highlightColor="rgba(0, 0, 0, 0.5)"
+                highlightStepDuration={80}
               />
             </div>
           </div>

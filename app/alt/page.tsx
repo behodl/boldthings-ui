@@ -3,7 +3,7 @@ import { ContactForm } from "@/components/contact-form"
 import { FadeInBackground } from "@/components/fade-in-background"
 import { FadeIn } from "@/components/fade-in"
 import { Footer } from "@/components/footer"
-import { TypewriterText } from "@/components/typewriter-text"
+import { HighlightedTypewriter } from "@/components/highlighted-typewriter"
 
 export default function AltHome() {
   const metaDescription =
@@ -30,14 +30,17 @@ export default function AltHome() {
                   <AnimatedLogo />
                 </div>
 
-                {/* Add typewriter text here too with center alignment */}
+                {/* Meta Description with Typewriter Effect that transitions to highlighted text */}
                 <div className="flex items-center justify-center max-w-xl w-full text-center mt-6">
-                  <TypewriterText
+                  <HighlightedTypewriter
                     text={metaDescription}
+                    wordToHighlight="selective"
                     className="text-retro-display/80 text-xs md:text-sm font-normal tracking-wide"
-                    speed={35} // Slower typing speed
-                    startDelay={2500} // Increased from 1500ms to 2500ms to ensure background loads first
-                    enableGlitch={true}
+                    typewriterSpeed={35}
+                    typewriterStartDelay={2500}
+                    highlightDelay={7500}
+                    highlightColor="rgba(0, 0, 0, 0.5)"
+                    highlightStepDuration={80}
                   />
                 </div>
               </div>
