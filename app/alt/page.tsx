@@ -44,7 +44,7 @@ export default function AltHome() {
             </div>
 
             {/* Contact Form Section */}
-            <FadeIn delay={6800} duration={1000} className="col-span-1">
+            <FadeIn delay={6800} duration={1800} className="col-span-1">
               <ContactForm />
             </FadeIn>
           </div>
