@@ -2,8 +2,12 @@ import { AnimatedLogo } from "@/components/animated-logo"
 import { ExternalLinkIcon } from "@/components/external-link-icon"
 import { FadeInBackground } from "@/components/fade-in-background"
 import { FadeIn } from "@/components/fade-in"
+import { TypewriterText } from "@/components/typewriter-text"
 
 export default function Home() {
+  const metaDescription =
+    "A selective development studio crafting high-impact systems and building long-term intellectual property."
+
   return (
     <div className="relative min-h-screen w-full overflow-hidden">
       {/* Background Image with improved fade-in effect and responsive sizes */}
@@ -24,16 +28,25 @@ export default function Home() {
 
       {/* Content */}
       <main className="relative z-30 flex min-h-screen flex-col items-center justify-center">
-        <div className="w-full max-w-7xl mx-auto flex flex-col items-center justify-center space-y-6 px-4">
-          {/* Logo Section - Centered on page */}
-          <AnimatedLogo />
+        <div className="w-full max-w-7xl mx-auto flex flex-col items-center justify-center px-4">
+          {/* Container for content with vertical centering */}
+          <div className="flex flex-col items-center justify-center">
+            {/* Logo Section - Centered on page */}
+            <div>
+              <AnimatedLogo />
+            </div>
 
-          {/* Meta Description */}
-          <FadeIn delay={500} duration={1200} className="max-w-xl text-center px-4">
-            <p className="font-space-mono text-retro-display/80 text-xs md:text-sm font-normal tracking-wide">
-              A selective development studio crafting high-impact systems and building long-term intellectual property.
-            </p>
-          </FadeIn>
+            {/* Meta Description with Typewriter Effect - Center aligned */}
+            <div className="flex items-center justify-center max-w-xl w-full text-center px-4 mt-6">
+              <TypewriterText
+                text={metaDescription}
+                className="text-retro-display/80 text-xs md:text-sm font-normal tracking-wide"
+                speed={15} // Faster typing speed
+                startDelay={1500}
+                enableGlitch={true}
+              />
+            </div>
+          </div>
         </div>
       </main>
 
