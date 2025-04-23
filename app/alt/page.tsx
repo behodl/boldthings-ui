@@ -36,7 +36,7 @@ export default function AltHome() {
                     text={metaDescription}
                     className="text-retro-display/80 text-xs md:text-sm font-normal tracking-wide"
                     speed={35} // Slower typing speed
-                    startDelay={1500}
+                    startDelay={2500} // Increased from 1500ms to 2500ms to ensure background loads first
                     enableGlitch={true}
                   />
                 </div>
