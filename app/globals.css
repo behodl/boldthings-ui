@@ -60,18 +60,18 @@ body {
   font-family: var(--font-space-mono), monospace;
 }
 
-/* Valve amp heating up glow animation for BOLD */
+/* Valve amp heating up glow animation for BOLD - FASTER VERSION */
 .bold-glow {
-  animation: heat-up-bold 3s ease-out forwards, bold-pulse 3s ease-in-out infinite 3s;
+  animation: heat-up-bold 1.5s ease-out forwards, bold-pulse 3s ease-in-out infinite 1.5s;
 }
 
 @keyframes heat-up-bold {
   0% {
     text-shadow: none;
   }
-  60% {
-    text-shadow: 0 0 4px rgba(255, 255, 255, 0.3), 0 0 8px rgba(255, 255, 255, 0.2), 0 0 12px rgba(255, 255, 255, 0.1),
-      0 0 20px rgba(255, 255, 255, 0.05);
+  70% {
+    text-shadow: 0 0 6px rgba(255, 255, 255, 0.5), 0 0 12px rgba(255, 255, 255, 0.3), 0 0 18px rgba(255, 255, 255, 0.2),
+      0 0 30px rgba(255, 255, 255, 0.1);
   }
   100% {
     text-shadow: 0 0 8px rgba(255, 255, 255, 0.7), 0 0 15px rgba(255, 255, 255, 0.5), 0 0 25px rgba(255, 255, 255, 0.3),
@@ -91,18 +91,18 @@ body {
   }
 }
 
-/* Valve amp heating up glow animation for THINGS */
+/* Valve amp heating up glow animation for THINGS - FASTER VERSION */
 .things-glow {
-  animation: heat-up-things 3s ease-out forwards, things-pulse 3s ease-in-out infinite 3s;
+  animation: heat-up-things 1.5s ease-out forwards, things-pulse 3s ease-in-out infinite 1.5s;
 }
 
 @keyframes heat-up-things {
   0% {
     text-shadow: none;
   }
-  60% {
-    text-shadow: 0 0 3px rgba(255, 255, 255, 0.2), 0 0 6px rgba(255, 255, 255, 0.15), 0 0 10px rgba(255, 255, 255, 0.1),
-      0 0 15px rgba(255, 255, 255, 0.05);
+  70% {
+    text-shadow: 0 0 4px rgba(255, 255, 255, 0.3), 0 0 8px rgba(255, 255, 255, 0.2), 0 0 15px rgba(255, 255, 255, 0.1),
+      0 0 20px rgba(255, 255, 255, 0.05);
   }
   100% {
     text-shadow: 0 0 6px rgba(255, 255, 255, 0.5), 0 0 12px rgba(255, 255, 255, 0.3), 0 0 20px rgba(255, 255, 255, 0.2),

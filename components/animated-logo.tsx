@@ -10,10 +10,10 @@ export function AnimatedLogo() {
   useEffect(() => {
     setMounted(true)
 
-    // Add a delay before starting the glow effect
+    // Add a shorter delay before starting the glow effect
     const glowTimer = setTimeout(() => {
       setGlowReady(true)
-    }, 1200) // This delay matches the fade-in duration
+    }, 800) // Reduced from 1200ms to 800ms
 
     return () => clearTimeout(glowTimer)
   }, [])
