@@ -52,6 +52,7 @@ export function HighlightedTypewriter({
       startIndex,
       endIndex,
       actualWord,
+      length: actualWord.length,
     }
   })()
 
@@ -209,10 +210,10 @@ export function HighlightedTypewriter({
       setIsHighlighting(true)
 
       // Get the total number of characters in the word
-      const wordLength = wordInfo.actualWord.length
+      const wordLength = wordInfo.length
       let currentChar = 0
 
-      // Function to highlight the next character
+      // Function to highlight the next character (from right to left)
       const highlightNextChar = () => {
         if (currentChar < wordLength) {
           currentChar++
@@ -273,22 +274,28 @@ export function HighlightedTypewriter({
         <>
           {beforeWord}
           <span className="relative inline-block">
-            {Array.from(word).map((char, index) => (
-              <span key={index} className="relative">
-                {index < highlightedChars && (
-                  <span
-                    className="absolute inset-0 z-0"
-                    style={{
-                      backgroundColor: highlightColor,
-                      borderRadius: "1px",
-                      // Add a slight skew to make it look more hand-drawn
-                      transform: "skew(-2deg, 0.5deg)",
-                    }}
-                  />
-                )}
-                <span className="relative z-10">{char}</span>
-              </span>
-            ))}
+            {Array.from(word).map((char, index) => {
+              // For right-to-left highlighting, we check if the character should be highlighted
+              // by comparing from the end of the word
+              const shouldHighlight = index >= word.length - highlightedChars
+
+              return (
+                <span key={index} className="relative">
+                  {shouldHighlight && (
+                    <span
+                      className="absolute inset-0 z-0"
+                      style={{
+                        backgroundColor: highlightColor,
+                        borderRadius: "1px",
+                        // Add a slight skew to make it look more hand-drawn
+                        transform: "skew(-2deg, 0.5deg)",
+                      }}
+                    />
+                  )}
+                  <span className="relative z-10">{char}</span>
+                </span>
+              )
+            })}
           </span>
           {afterWord}
         </>
