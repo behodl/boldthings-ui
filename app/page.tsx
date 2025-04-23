@@ -51,7 +51,7 @@ export default function Home() {
       </main>
 
       {/* Get In Touch Button - Bottom Center Tab with mailto link */}
-      <FadeIn delay={800} duration={1000} className="group bottom-center-tab">
+      <FadeIn delay={4400} duration={1000} className="group bottom-center-tab">
         <a href="mailto:hello@boldthin.gs" className="block">
           <div className="vintage-button-wrapper">
             <div className="vintage-button">

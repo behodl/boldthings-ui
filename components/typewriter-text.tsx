@@ -14,7 +14,7 @@ interface TypewriterTextProps {
 export function TypewriterText({
   text,
   className = "",
-  speed = 20, // Faster typing speed (was 40ms)
+  speed = 20, // Base typing speed
   startDelay = 1000,
   enableGlitch = true,
 }: TypewriterTextProps) {
@@ -68,12 +68,54 @@ export function TypewriterText({
     let currentIndex = 0
     const maxIndex = text.length
 
-    // Function to add the next character
+    // Function to add the next character with organic variance
     const typeNextChar = () => {
       if (currentIndex < maxIndex) {
         setDisplayedText(text.substring(0, currentIndex + 1))
         currentIndex++
-        setTimeout(typeNextChar, speed)
+
+        // Calculate next character delay with organic variance
+        let nextDelay = speed
+
+        // Current character (just typed)
+        const currentChar = text[currentIndex - 1]
+
+        // Next character (about to be typed)
+        const nextChar = currentIndex < maxIndex ? text[currentIndex] : null
+
+        // Add variance based on character type
+        if (currentIndex === maxIndex - 1) {
+          // Last character (usually a period) - add a longer pause before it
+          nextDelay = speed * 3 // Significantly longer pause before the final character
+        } else if (currentChar === "." || currentChar === "!" || currentChar === "?") {
+          // End of sentence - longer pause
+          nextDelay = speed * 2.5
+        } else if (currentChar === "," || currentChar === ";" || currentChar === ":") {
+          // Mid-sentence pause - medium pause
+          nextDelay = speed * 1.8
+        } else if (currentChar === " " && nextChar && /[A-Z]/.test(nextChar)) {
+          // Space before capital letter (likely new sentence or proper noun) - slight pause
+          nextDelay = speed * 1.5
+        } else {
+          // Normal character - random variance
+          // More human-like: sometimes fast, sometimes slow, occasionally a brief pause
+          const randomFactor = Math.random()
+          if (randomFactor > 0.95) {
+            // Occasional longer pause (5% chance)
+            nextDelay = speed * (1.5 + Math.random())
+          } else if (randomFactor > 0.7) {
+            // Slightly slower (25% chance)
+            nextDelay = speed * (1.1 + Math.random() * 0.3)
+          } else if (randomFactor > 0.4) {
+            // Normal speed (30% chance)
+            nextDelay = speed
+          } else {
+            // Slightly faster (40% chance)
+            nextDelay = speed * (0.7 + Math.random() * 0.3)
+          }
+        }
+
+        setTimeout(typeNextChar, nextDelay)
       } else {
         setIsDone(true)
       }
