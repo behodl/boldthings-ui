@@ -15,10 +15,14 @@ export function ClientLoginButton({ className }: ClientLoginButtonProps) {
   const openModal = () => {
     console.log("Opening modal")
     setIsModalOpen(true)
+    // Add modal-open class to body when modal is open
+    document.body.classList.add("modal-open")
   }
 
   const closeModal = () => {
     setIsModalOpen(false)
+    // Remove modal-open class from body when modal is closed
+    document.body.classList.remove("modal-open")
   }
 
   return (

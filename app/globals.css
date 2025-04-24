@@ -391,7 +391,12 @@ body {
   left: 50%;
   transform: translateX(-50%);
   bottom: 2rem;
-  z-index: 50;
+  z-index: 40;
+}
+
+/* Add this new class for when modal is open */
+.modal-open .bottom-center-tab {
+  z-index: 10; /* Lower z-index when modal is open */
 }
 
 /* Vintage Button Styling */

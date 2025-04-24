@@ -217,7 +217,7 @@ export function LoginModal({ isOpen, onClose }: LoginModalProps) {
   return (
     <div
       className={cn(
-        "fixed inset-0 z-50 flex items-center justify-center transition-opacity duration-300 ease-in-out",
+        "fixed inset-0 z-[100] flex items-center justify-center transition-opacity duration-300 ease-in-out",
         isClosing ? "opacity-0" : "opacity-100",
       )}
     >
