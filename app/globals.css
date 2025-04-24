@@ -393,21 +393,16 @@ body {
 }
 
 /* Add this CSS class back to the globals.css file - it was missing */
+/* Remove the bottom-center-tab class and related modal-open classes */
+/* Replace with this simpler version */
 
-/* Bottom center fixed position */
-.bottom-center-tab {
-  position: fixed;
-  left: 50%;
-  transform: translateX(-50%);
-  bottom: 2rem;
-  z-index: 40;
-  transition: z-index 0ms linear 500ms; /* Delay the z-index change until after animations */
-}
-
-/* Add this new class for when modal is open */
-.modal-open .bottom-center-tab {
-  z-index: 10;
-  transition: z-index 0ms linear 0ms; /* Immediate z-index change when modal opens */
+@keyframes fadeInGetInTouch {
+  0% {
+    opacity: 0;
+  }
+  100% {
+    opacity: 1;
+  }
 }
 
 /* Vintage Button Styling */

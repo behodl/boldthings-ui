@@ -68,13 +68,8 @@ export default function Home() {
 
       {/* Get In Touch Button - Bottom Center Tab with mailto link - Appears after typewriter */}
       <div
-        className="group bottom-center-tab"
+        className="group fixed left-1/2 bottom-8 -translate-x-1/2 z-30"
         style={{
-          position: "fixed",
-          left: "50%",
-          transform: "translateX(-50%)",
-          bottom: "2rem",
-          zIndex: 40,
           opacity: 0,
           transition: "opacity 1800ms ease-in-out",
           animation: "fadeInGetInTouch 1800ms ease-in-out forwards",

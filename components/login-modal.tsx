@@ -32,25 +32,25 @@ export function LoginModal({ isOpen, onClose }: LoginModalProps) {
   // Handle modal visibility
   useEffect(() => {
     if (isOpen) {
+      // First make the modal visible without animation
       setIsVisible(true)
       setIsClosing(false)
 
-      // Small delay to trigger the fade-in animation
-      setTimeout(() => {
-        document.body.classList.add("modal-open")
-      }, 10)
+      // Then trigger the fade-in animation after a tiny delay
+      // This ensures the browser has time to render the initial state
+      requestAnimationFrame(() => {
+        requestAnimationFrame(() => {
+          // Using RAF twice ensures we're past the next browser paint
+          document.body.style.overflow = "hidden" // Prevent background scrolling
+        })
+      })
     } else {
       setIsClosing(true)
 
-      // Wait for animation to complete before removing the modal-open class
-      // This ensures the button stays behind the backdrop until it's fully faded out
+      // Wait for animation to complete before removing the modal
       const timer = setTimeout(() => {
         setIsVisible(false)
-
-        // Only remove the modal-open class AFTER the backdrop is fully faded out
-        setTimeout(() => {
-          document.body.classList.remove("modal-open")
-        }, 100)
+        document.body.style.overflow = "" // Restore scrolling
 
         // Reset form state after modal is fully hidden
         setTimeout(() => {
@@ -210,9 +210,10 @@ export function LoginModal({ isOpen, onClose }: LoginModalProps) {
   return (
     <div
       className={cn(
-        "fixed inset-0 z-[100] flex items-center justify-center",
+        "fixed inset-0 z-50 flex items-center justify-center",
         isClosing ? "animate-fade-out" : "animate-fade-in",
       )}
+      style={{ zIndex: 9999 }} // Explicitly set a very high z-index
     >
       {/* Backdrop without blur effect */}
       <div

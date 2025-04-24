@@ -12,9 +12,9 @@ interface ClientLoginButtonProps {
 export function ClientLoginButton({ className }: ClientLoginButtonProps) {
   const [isModalOpen, setIsModalOpen] = useState(false)
 
+  // Replace the existing openModal function with this updated version:
   const openModal = useCallback(() => {
-    // Add modal-open class immediately when opening
-    document.body.classList.add("modal-open")
+    // Pre-render the modal before showing it
     setIsModalOpen(true)
   }, [])
 
