@@ -12,21 +12,12 @@ interface ClientLoginButtonProps {
 export function ClientLoginButton({ className }: ClientLoginButtonProps) {
   const [isModalOpen, setIsModalOpen] = useState(false)
 
-  // Use useCallback to ensure the function doesn't change between renders
   const openModal = useCallback(() => {
-    // First add the modal-open class to body
-    document.body.classList.add("modal-open")
-
-    // Then set the modal to open
     setIsModalOpen(true)
   }, [])
 
-  // Use useCallback for closeModal as well
   const closeModal = useCallback(() => {
     setIsModalOpen(false)
-
-    // Remove modal-open class from body when modal is closed
-    document.body.classList.remove("modal-open")
   }, [])
 
   return (

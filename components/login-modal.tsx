@@ -4,7 +4,6 @@ import type React from "react"
 
 import { useState, useRef, useEffect } from "react"
 import { ArrowRight, AlertCircle, X, RotateCw } from "lucide-react"
-import { FadeIn } from "./fade-in"
 import { cn } from "@/lib/utils"
 
 interface LoginModalProps {
@@ -13,52 +12,66 @@ interface LoginModalProps {
 }
 
 export function LoginModal({ isOpen, onClose }: LoginModalProps) {
+  // Form state
   const [email, setEmail] = useState("")
   const [isEmailSubmitted, setIsEmailSubmitted] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
   const [errorMessage, setErrorMessage] = useState("")
   const [magicCode, setMagicCode] = useState(["", "", "", "", "", ""])
-  const [isCodeSubmitted, setIsCodeSubmitted] = useState(false)
   const [codeError, setCodeError] = useState("")
-  const [isTransitioning, setIsTransitioning] = useState(false)
-  const [isClosing, setIsClosing] = useState(false)
+
+  // Animation state
   const [isVisible, setIsVisible] = useState(false)
-  const [isBackdropVisible, setIsBackdropVisible] = useState(false)
-  const [isContentVisible, setIsContentVisible] = useState(false)
+  const [isAnimating, setIsAnimating] = useState(false)
+  const [isClosing, setIsClosing] = useState(false)
 
   const codeInputRefs = useRef<(HTMLInputElement | null)[]>([])
   const emailInputRef = useRef<HTMLInputElement>(null)
   const modalRef = useRef<HTMLDivElement>(null)
 
-  // Handle modal opening and closing animations with proper sequencing
+  // Handle modal visibility
   useEffect(() => {
     if (isOpen) {
-      // Step 1: Make the container visible but fully transparent
       setIsVisible(true)
       setIsClosing(false)
 
-      // Step 2: Start fading in the backdrop
+      // Small delay to trigger the fade-in animation
       setTimeout(() => {
-        setIsBackdropVisible(true)
-
-        // Step 3: After backdrop starts appearing, fade in the modal content
-        setTimeout(() => {
-          setIsContentVisible(true)
-        }, 150) // Delay modal content appearance
-      }, 10) // Small delay to ensure DOM is ready
+        document.body.classList.add("modal-open")
+      }, 10)
     } else {
-      // Reverse order for closing
       setIsClosing(true)
-      setIsContentVisible(false)
-      setIsBackdropVisible(false)
+      document.body.classList.remove("modal-open")
 
-      // Remove from DOM after animation completes
+      // Wait for animation to complete before hiding
       const timer = setTimeout(() => {
         setIsVisible(false)
-      }, 400) // Slightly longer than the CSS transition duration
+
+        // Reset form state after modal is fully hidden
+        setTimeout(() => {
+          setEmail("")
+          setIsEmailSubmitted(false)
+          setErrorMessage("")
+          setMagicCode(["", "", "", "", "", ""])
+          setCodeError("")
+          setIsLoading(false)
+        }, 100)
+      }, 500)
+
       return () => clearTimeout(timer)
     }
   }, [isOpen])
+
+  // Focus email input when modal opens
+  useEffect(() => {
+    if (isOpen && !isEmailSubmitted && emailInputRef.current) {
+      const timer = setTimeout(() => {
+        emailInputRef.current?.focus()
+      }, 300)
+
+      return () => clearTimeout(timer)
+    }
+  }, [isOpen, isEmailSubmitted])
 
   // Handle email submission
   const handleEmailSubmit = (e: React.FormEvent) => {
@@ -75,19 +88,24 @@ export function LoginModal({ isOpen, onClose }: LoginModalProps) {
         return
       }
 
-      // Start transition while keeping loading state true
-      setIsTransitioning(true)
+      // Start transition
+      setIsAnimating(true)
 
-      // Only set loading to false and change screens after transition completes
+      // Change screens after transition completes
       setTimeout(() => {
         setIsEmailSubmitted(true)
-        setIsTransitioning(false)
+        setIsAnimating(false)
         setIsLoading(false)
+
+        // Focus first code input after transition
+        setTimeout(() => {
+          codeInputRefs.current[0]?.focus()
+        }, 100)
       }, 300)
     }, 1000)
   }
 
-  // Update the handleCodeChange function to automatically submit when all digits are filled
+  // Handle code input
   const handleCodeChange = (index: number, value: string) => {
     if (value.length > 1) {
       value = value.slice(0, 1)
@@ -114,86 +132,39 @@ export function LoginModal({ isOpen, onClose }: LoginModalProps) {
     }
   }
 
-  // Update the handleCodeSubmit function to handle error transitions better
+  // Handle code submission
   const handleCodeSubmit = () => {
     setIsLoading(true)
     setCodeError("")
 
     // Simulate API call
     setTimeout(() => {
-      // First stop loading
       setIsLoading(false)
-
-      // Then show error with a slight delay for smoother transition
-      setTimeout(() => {
-        setCodeError("Invalid code. Please try again.")
-        // Clear the code fields when there's an error
-        setMagicCode(["", "", "", "", "", ""])
-        // Focus the first input field
-        codeInputRefs.current[0]?.focus()
-      }, 100)
+      setCodeError("Invalid code. Please try again.")
+      setMagicCode(["", "", "", "", "", ""])
+      codeInputRefs.current[0]?.focus()
     }, 1000)
   }
 
-  // Handle going back to email screen - now clears the email field
+  // Handle going back to email screen
   const handleBackToEmail = () => {
-    // First fade out the error message if it exists
-    if (codeError) {
-      setCodeError("")
-    }
+    setIsAnimating(true)
 
-    // Then start the screen transition
-    setIsTransitioning(true)
-
-    // Clear the email during the transition so it's not visible to the user
     setTimeout(() => {
       setEmail("")
       setIsEmailSubmitted(false)
-      setIsTransitioning(false)
+      setIsAnimating(false)
 
-      // Focus the email input after transition completes
       setTimeout(() => {
         emailInputRef.current?.focus()
-      }, 50)
+      }, 100)
     }, 300)
   }
 
   // Handle closing the modal with animation
   const handleClose = () => {
-    setIsClosing(true)
-    setIsContentVisible(false)
-    setIsBackdropVisible(false)
-
-    // Wait for animation to complete before calling onClose
-    setTimeout(() => {
-      onClose()
-    }, 400)
+    onClose()
   }
-
-  // Reset state when modal closes
-  useEffect(() => {
-    if (!isOpen) {
-      setTimeout(() => {
-        setEmail("")
-        setIsEmailSubmitted(false)
-        setErrorMessage("")
-        setMagicCode(["", "", "", "", "", ""])
-        setIsCodeSubmitted(false)
-        setCodeError("")
-        setIsTransitioning(false)
-        setIsLoading(false)
-      }, 400)
-    }
-  }, [isOpen])
-
-  // Focus email input when modal opens
-  useEffect(() => {
-    if (isOpen && !isEmailSubmitted && emailInputRef.current) {
-      setTimeout(() => {
-        emailInputRef.current?.focus()
-      }, 300) // Delay focus until animation completes
-    }
-  }, [isOpen, isEmailSubmitted])
 
   // Close modal when clicking outside
   useEffect(() => {
@@ -232,31 +203,37 @@ export function LoginModal({ isOpen, onClose }: LoginModalProps) {
   if (!isVisible && !isOpen) return null
 
   return (
-    <div className={cn("fixed inset-0 z-[100] flex items-center justify-center", isVisible ? "block" : "hidden")}>
+    <div
+      className={cn(
+        "fixed inset-0 z-[100] flex items-center justify-center",
+        isClosing ? "animate-fade-out" : "animate-fade-in",
+      )}
+    >
       {/* Backdrop with blur effect */}
       <div
         className={cn(
-          "absolute inset-0 bg-black/60 backdrop-blur-sm transition-all duration-400 ease-in-out",
-          isBackdropVisible ? "opacity-100" : "opacity-0 backdrop-blur-none",
+          "absolute inset-0 bg-black/60 backdrop-blur-sm transition-opacity duration-500",
+          isClosing ? "opacity-0" : "opacity-100",
         )}
+        onClick={handleClose}
       />
 
-      {/* Modal container - centered both horizontally and vertically */}
+      {/* Modal container */}
       <div
         ref={modalRef}
         className={cn(
-          "relative z-10 w-full max-w-[90%] sm:max-w-md mx-auto transition-opacity duration-300 ease-out",
-          isContentVisible ? "opacity-100" : "opacity-0",
+          "relative z-10 w-full max-w-[90%] sm:max-w-md mx-auto transition-all duration-500",
+          isClosing ? "opacity-0 translate-y-4" : "opacity-100 translate-y-0",
         )}
         style={{
           position: "absolute",
           left: "50%",
           top: "50%",
-          transform: "translate(-50%, -50%)",
+          transform: `translate(-50%, -50%) translateY(${isClosing ? "4px" : "0"})`,
         }}
       >
         <div className="bg-retro-dark border border-retro-display/20 rounded-md shadow-2xl overflow-hidden">
-          {/* Close button - absolute top right corner */}
+          {/* Close button */}
           <button
             onClick={handleClose}
             className="absolute top-2 right-2 text-retro-display/70 hover:text-retro-display transition-colors p-1"
@@ -266,11 +243,11 @@ export function LoginModal({ isOpen, onClose }: LoginModalProps) {
             <X size={16} />
           </button>
 
-          {/* Modal content with proper padding */}
+          {/* Modal content */}
           <div className="p-3 sm:p-5">
-            <div className={cn("transition-opacity duration-300", isTransitioning ? "opacity-0" : "opacity-100")}>
+            <div className={cn("transition-opacity duration-300", isAnimating ? "opacity-0" : "opacity-100")}>
               {!isEmailSubmitted ? (
-                <FadeIn duration={300}>
+                <div className="animate-fade-in">
                   <form onSubmit={handleEmailSubmit}>
                     <div className="mb-1">
                       <label htmlFor="email" className="block font-space-mono text-xs text-retro-display/80 mb-1">
@@ -290,10 +267,10 @@ export function LoginModal({ isOpen, onClose }: LoginModalProps) {
                       />
                     </div>
 
-                    {/* Fixed height container for error message - hidden when not in use */}
-                    <div className="h-0">
+                    {/* Error message */}
+                    <div className="h-5">
                       {errorMessage && (
-                        <div className="flex items-center text-red-400 text-xs font-space-mono mt-1 transition-opacity duration-300 ease-in-out">
+                        <div className="flex items-center text-red-400 text-xs font-space-mono mt-1 animate-fade-in">
                           <AlertCircle size={12} className="mr-1.5" />
                           {errorMessage}
                         </div>
@@ -325,9 +302,9 @@ export function LoginModal({ isOpen, onClose }: LoginModalProps) {
                       </button>
                     </div>
                   </form>
-                </FadeIn>
+                </div>
               ) : (
-                <FadeIn duration={300}>
+                <div className="animate-fade-in">
                   <div className="space-y-4">
                     <div className="text-center mb-4">
                       <p className="font-space-mono text-xs text-retro-display/90">
@@ -358,46 +335,34 @@ export function LoginModal({ isOpen, onClose }: LoginModalProps) {
                       ))}
                     </div>
 
-                    {/* Error/loading message container with smooth transitions - ONLY FADE, NO SCALE */}
-                    <div className="h-5 text-center mb-2 relative">
-                      <div
-                        className={cn(
-                          "absolute inset-0 flex items-center justify-center transition-opacity duration-300 ease-in-out",
-                          isLoading ? "opacity-100" : "opacity-0",
-                        )}
-                        aria-hidden={!isLoading}
-                      >
-                        <div className="flex items-center justify-center text-retro-display/70 font-space-mono text-xs">
+                    {/* Error/loading message */}
+                    <div className="h-5 text-center mb-2">
+                      {isLoading && (
+                        <div className="flex items-center justify-center text-retro-display/70 font-space-mono text-xs animate-fade-in">
                           <RotateCw size={12} className="animate-spin mr-2" />
                           <span>Verifying</span>
                         </div>
-                      </div>
-                      <div
-                        className={cn(
-                          "absolute inset-0 flex items-center justify-center transition-opacity duration-300 ease-in-out",
-                          codeError && !isLoading ? "opacity-100" : "opacity-0",
-                        )}
-                        aria-hidden={!codeError || isLoading}
-                      >
-                        <div className="flex items-center justify-center text-red-400 font-space-mono text-xs">
+                      )}
+                      {codeError && !isLoading && (
+                        <div className="flex items-center justify-center text-red-400 font-space-mono text-xs animate-fade-in">
                           <AlertCircle size={12} className="mr-1.5" />
                           {codeError}
                         </div>
-                      </div>
+                      )}
                     </div>
 
                     <div className="text-center">
                       <button
                         type="button"
                         onClick={handleBackToEmail}
-                        className="font-space-mono text-retro-teal/60 hover:text-retro-teal text-xs transition-colors duration-300 ease-in-out"
+                        className="font-space-mono text-retro-teal/60 hover:text-retro-teal text-xs transition-colors"
                         disabled={isLoading}
                       >
                         Use a different email
                       </button>
                     </div>
                   </div>
-                </FadeIn>
+                </div>
               )}
             </div>
           </div>
