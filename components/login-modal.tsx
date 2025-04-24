@@ -41,11 +41,16 @@ export function LoginModal({ isOpen, onClose }: LoginModalProps) {
       }, 10)
     } else {
       setIsClosing(true)
-      document.body.classList.remove("modal-open")
 
-      // Wait for animation to complete before hiding
+      // Wait for animation to complete before removing the modal-open class
+      // This ensures the button stays behind the backdrop until it's fully faded out
       const timer = setTimeout(() => {
         setIsVisible(false)
+
+        // Only remove the modal-open class AFTER the backdrop is fully faded out
+        setTimeout(() => {
+          document.body.classList.remove("modal-open")
+        }, 100)
 
         // Reset form state after modal is fully hidden
         setTimeout(() => {
@@ -209,10 +214,10 @@ export function LoginModal({ isOpen, onClose }: LoginModalProps) {
         isClosing ? "animate-fade-out" : "animate-fade-in",
       )}
     >
-      {/* Backdrop with blur effect */}
+      {/* Backdrop without blur effect */}
       <div
         className={cn(
-          "absolute inset-0 bg-black/60 backdrop-blur-sm transition-opacity duration-500",
+          "absolute inset-0 bg-black/60 transition-opacity duration-500",
           isClosing ? "opacity-0" : "opacity-100",
         )}
         onClick={handleClose}
@@ -277,7 +282,7 @@ export function LoginModal({ isOpen, onClose }: LoginModalProps) {
                       )}
                     </div>
 
-                    <div className="mt-4">
+                    <div className="mt-1">
                       <button
                         type="submit"
                         disabled={isLoading}

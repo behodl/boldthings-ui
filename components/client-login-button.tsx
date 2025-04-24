@@ -13,10 +13,14 @@ export function ClientLoginButton({ className }: ClientLoginButtonProps) {
   const [isModalOpen, setIsModalOpen] = useState(false)
 
   const openModal = useCallback(() => {
+    // Add modal-open class immediately when opening
+    document.body.classList.add("modal-open")
     setIsModalOpen(true)
   }, [])
 
   const closeModal = useCallback(() => {
+    // Don't remove the modal-open class here - let the modal component handle it
+    // This ensures proper timing with the fade-out animation
     setIsModalOpen(false)
   }, [])
 

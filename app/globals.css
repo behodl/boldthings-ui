@@ -392,11 +392,13 @@ body {
   transform: translateX(-50%);
   bottom: 2rem;
   z-index: 40;
+  transition: z-index 0ms linear 500ms; /* Delay the z-index change until after animations */
 }
 
 /* Add this new class for when modal is open */
 .modal-open .bottom-center-tab {
-  z-index: 10; /* Lower z-index when modal is open */
+  z-index: 10;
+  transition: z-index 0ms linear 0ms; /* Immediate z-index change when modal opens */
 }
 
 /* Vintage Button Styling */
