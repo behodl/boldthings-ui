@@ -23,25 +23,39 @@ export function LoginModal({ isOpen, onClose }: LoginModalProps) {
   const [isTransitioning, setIsTransitioning] = useState(false)
   const [isClosing, setIsClosing] = useState(false)
   const [isVisible, setIsVisible] = useState(false)
+  const [isBackdropVisible, setIsBackdropVisible] = useState(false)
+  const [isContentVisible, setIsContentVisible] = useState(false)
 
   const codeInputRefs = useRef<(HTMLInputElement | null)[]>([])
   const emailInputRef = useRef<HTMLInputElement>(null)
   const modalRef = useRef<HTMLDivElement>(null)
 
-  // Handle modal opening and closing animations
+  // Handle modal opening and closing animations with proper sequencing
   useEffect(() => {
     if (isOpen) {
+      // Step 1: Make the container visible but fully transparent
       setIsVisible(true)
-      // Small delay to ensure the modal is in the DOM before starting the animation
+      setIsClosing(false)
+
+      // Step 2: Start fading in the backdrop
       setTimeout(() => {
-        setIsClosing(false)
-      }, 10)
+        setIsBackdropVisible(true)
+
+        // Step 3: After backdrop starts appearing, fade in the modal content
+        setTimeout(() => {
+          setIsContentVisible(true)
+        }, 150) // Delay modal content appearance
+      }, 10) // Small delay to ensure DOM is ready
     } else {
+      // Reverse order for closing
       setIsClosing(true)
-      // Wait for animation to complete before removing from DOM
+      setIsContentVisible(false)
+      setIsBackdropVisible(false)
+
+      // Remove from DOM after animation completes
       const timer = setTimeout(() => {
         setIsVisible(false)
-      }, 300) // Match this with the CSS transition duration
+      }, 400) // Slightly longer than the CSS transition duration
       return () => clearTimeout(timer)
     }
   }, [isOpen])
@@ -147,10 +161,13 @@ export function LoginModal({ isOpen, onClose }: LoginModalProps) {
   // Handle closing the modal with animation
   const handleClose = () => {
     setIsClosing(true)
+    setIsContentVisible(false)
+    setIsBackdropVisible(false)
+
     // Wait for animation to complete before calling onClose
     setTimeout(() => {
       onClose()
-    }, 300)
+    }, 400)
   }
 
   // Reset state when modal closes
@@ -165,7 +182,7 @@ export function LoginModal({ isOpen, onClose }: LoginModalProps) {
         setCodeError("")
         setIsTransitioning(false)
         setIsLoading(false)
-      }, 300)
+      }, 400)
     }
   }, [isOpen])
 
@@ -174,7 +191,7 @@ export function LoginModal({ isOpen, onClose }: LoginModalProps) {
     if (isOpen && !isEmailSubmitted && emailInputRef.current) {
       setTimeout(() => {
         emailInputRef.current?.focus()
-      }, 100)
+      }, 300) // Delay focus until animation completes
     }
   }, [isOpen, isEmailSubmitted])
 
@@ -215,27 +232,28 @@ export function LoginModal({ isOpen, onClose }: LoginModalProps) {
   if (!isVisible && !isOpen) return null
 
   return (
-    <div
-      className={cn(
-        "fixed inset-0 z-[100] flex items-center justify-center transition-opacity duration-300 ease-in-out",
-        isClosing ? "opacity-0" : "opacity-100",
-      )}
-    >
+    <div className={cn("fixed inset-0 z-[100] flex items-center justify-center", isVisible ? "block" : "hidden")}>
       {/* Backdrop with blur effect */}
       <div
         className={cn(
-          "absolute inset-0 bg-black/60 backdrop-blur-sm transition-opacity duration-300",
-          isClosing ? "opacity-0" : "opacity-100",
+          "absolute inset-0 bg-black/60 backdrop-blur-sm transition-all duration-400 ease-in-out",
+          isBackdropVisible ? "opacity-100" : "opacity-0 backdrop-blur-none",
         )}
       />
 
-      {/* Modal container */}
+      {/* Modal container - centered both horizontally and vertically */}
       <div
         ref={modalRef}
         className={cn(
-          "relative z-10 w-full max-w-[90%] sm:max-w-md mx-2 sm:mx-4 overflow-hidden transition-all duration-300 ease-in-out",
-          isClosing ? "opacity-0 transform scale-95" : "opacity-100 transform scale-100",
+          "relative z-10 w-full max-w-[90%] sm:max-w-md mx-auto transition-opacity duration-300 ease-out",
+          isContentVisible ? "opacity-100" : "opacity-0",
         )}
+        style={{
+          position: "absolute",
+          left: "50%",
+          top: "50%",
+          transform: "translate(-50%, -50%)",
+        }}
       >
         <div className="bg-retro-dark border border-retro-display/20 rounded-md shadow-2xl overflow-hidden">
           {/* Close button - absolute top right corner */}

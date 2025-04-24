@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useCallback } from "react"
 import { User } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { LoginModal } from "./login-modal"
@@ -12,18 +12,22 @@ interface ClientLoginButtonProps {
 export function ClientLoginButton({ className }: ClientLoginButtonProps) {
   const [isModalOpen, setIsModalOpen] = useState(false)
 
-  const openModal = () => {
-    console.log("Opening modal")
-    setIsModalOpen(true)
-    // Add modal-open class to body when modal is open
+  // Use useCallback to ensure the function doesn't change between renders
+  const openModal = useCallback(() => {
+    // First add the modal-open class to body
     document.body.classList.add("modal-open")
-  }
 
-  const closeModal = () => {
+    // Then set the modal to open
+    setIsModalOpen(true)
+  }, [])
+
+  // Use useCallback for closeModal as well
+  const closeModal = useCallback(() => {
     setIsModalOpen(false)
+
     // Remove modal-open class from body when modal is closed
     document.body.classList.remove("modal-open")
-  }
+  }, [])
 
   return (
     <>
@@ -41,7 +45,7 @@ export function ClientLoginButton({ className }: ClientLoginButtonProps) {
         </div>
       </button>
 
-      {isModalOpen && <LoginModal isOpen={isModalOpen} onClose={closeModal} />}
+      <LoginModal isOpen={isModalOpen} onClose={closeModal} />
     </>
   )
 }
