@@ -22,7 +22,7 @@ export default function AltHome() {
 
       {/* Client Login Button - Top Right */}
       <div className="absolute top-4 right-4 z-40" style={{ pointerEvents: "auto" }}>
-        <FadeIn delay={6800} duration={1800}>
+        <FadeIn delay={300} duration={1200}>
           <ClientLoginButton />
         </FadeIn>
       </div>

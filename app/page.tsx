@@ -31,9 +31,9 @@ export default function Home() {
       {/* VHS Glitch Effect */}
       <VHSGlitchEffect />
 
-      {/* Client Login Button - Top Right */}
+      {/* Client Login Button - Top Right - Fades in with logo */}
       <div className="absolute top-4 right-4 z-40" style={{ pointerEvents: "auto" }}>
-        <FadeIn delay={6800} duration={1800}>
+        <FadeIn delay={300} duration={1200}>
           <ClientLoginButton />
         </FadeIn>
       </div>
@@ -66,8 +66,21 @@ export default function Home() {
         </div>
       </main>
 
-      {/* Get In Touch Button - Bottom Center Tab with mailto link */}
-      <FadeIn delay={6800} duration={1800} className="group bottom-center-tab">
+      {/* Get In Touch Button - Bottom Center Tab with mailto link - Appears after typewriter */}
+      <div
+        className="group bottom-center-tab"
+        style={{
+          position: "fixed",
+          left: "50%",
+          transform: "translateX(-50%)",
+          bottom: "2rem",
+          zIndex: 40,
+          opacity: 0,
+          transition: "opacity 1800ms ease-in-out",
+          animation: "fadeInGetInTouch 1800ms ease-in-out forwards",
+          animationDelay: "6800ms",
+        }}
+      >
         <a href="mailto:hello@boldthin.gs" className="block">
           <div className="vintage-button-wrapper">
             <div className="vintage-button">
@@ -77,7 +90,7 @@ export default function Home() {
             </div>
           </div>
         </a>
-      </FadeIn>
+      </div>
     </div>
   )
 }

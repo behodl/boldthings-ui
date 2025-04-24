@@ -14,8 +14,12 @@ interface FadeInProps {
 
 export function FadeIn({ children, delay = 0, duration = 1000, className }: FadeInProps) {
   const [isVisible, setIsVisible] = useState(false)
+  const [isInitialRender, setIsInitialRender] = useState(true)
 
   useEffect(() => {
+    // Set initial render to false immediately to prevent flash
+    setIsInitialRender(false)
+
     const timer = setTimeout(() => {
       setIsVisible(true)
     }, delay)
@@ -29,6 +33,8 @@ export function FadeIn({ children, delay = 0, duration = 1000, className }: Fade
       style={{
         opacity: isVisible ? 1 : 0,
         transitionDuration: `${duration}ms`,
+        // Hide completely on initial render to prevent flash
+        visibility: isInitialRender ? "hidden" : "visible",
       }}
     >
       {children}
