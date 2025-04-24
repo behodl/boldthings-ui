@@ -1,4 +1,5 @@
 import { AnimatedLogo } from "@/components/animated-logo"
+import { ClientLoginButton } from "@/components/client-login-button"
 import { ContactForm } from "@/components/contact-form"
 import { FadeInBackground } from "@/components/fade-in-background"
 import { FadeIn } from "@/components/fade-in"
@@ -18,6 +19,13 @@ export default function AltHome() {
         largeSrc="/images/gradient-background-large.webp"
         alt="Gradient background"
       />
+
+      {/* Client Login Button - Top Right */}
+      <div className="absolute top-4 right-4 z-40" style={{ pointerEvents: "auto" }}>
+        <FadeIn delay={6800} duration={1800}>
+          <ClientLoginButton />
+        </FadeIn>
+      </div>
 
       <main className="relative z-10 flex min-h-screen flex-col items-center">
         <div className="flex flex-col items-center justify-center w-full min-h-screen p-4 md:p-8">

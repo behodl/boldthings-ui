@@ -1,4 +1,5 @@
 import { AnimatedLogo } from "@/components/animated-logo"
+import { ClientLoginButton } from "@/components/client-login-button"
 import { ExternalLinkIcon } from "@/components/external-link-icon"
 import { FadeInBackground } from "@/components/fade-in-background"
 import { FadeIn } from "@/components/fade-in"
@@ -25,6 +26,13 @@ export default function Home() {
       <div className="absolute inset-0 z-20 scanline"></div>
       <div className="absolute inset-0 z-20 moving-scanline"></div>
       <div className="absolute inset-0 z-20 crt-overlay"></div>
+
+      {/* Client Login Button - Top Right */}
+      <div className="absolute top-4 right-4 z-40" style={{ pointerEvents: "auto" }}>
+        <FadeIn delay={6800} duration={1800}>
+          <ClientLoginButton />
+        </FadeIn>
+      </div>
 
       {/* Content */}
       <main className="relative z-30 flex min-h-screen flex-col items-center justify-center">

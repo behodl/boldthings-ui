@@ -383,6 +383,17 @@ body {
   }
 }
 
+/* Add this CSS class back to the globals.css file - it was missing */
+
+/* Bottom center fixed position */
+.bottom-center-tab {
+  position: fixed;
+  left: 50%;
+  transform: translateX(-50%);
+  bottom: 2rem;
+  z-index: 50;
+}
+
 /* Vintage Button Styling */
 .vintage-button-wrapper {
   position: relative;
@@ -433,119 +444,4 @@ body {
 
 .group:active .vintage-button-wrapper::after {
   height: 2px;
-}
-
-/* Bottom center fixed position */
-.bottom-center-tab {
-  position: fixed;
-  left: 50%;
-  transform: translateX(-50%);
-  bottom: 2rem;
-  z-index: 50;
-}
-
-/* Occasional flicker animation */
-@keyframes flicker {
-  0%,
-  100% {
-    opacity: 1;
-  }
-  0.1%,
-  0.2% {
-    opacity: 0.8;
-  }
-  0.5%,
-  0.6% {
-    opacity: 0.9;
-  }
-  25.1%,
-  25.2% {
-    opacity: 0.8;
-  }
-  50.5%,
-  50.6% {
-    opacity: 0.9;
-  }
-  75.1%,
-  75.6% {
-    opacity: 0.8;
-  }
-  99.1%,
-  99.2% {
-    opacity: 0.9;
-  }
-}
-
-.animate-flicker {
-  animation: flicker 15s linear infinite;
-}
-
-/* Reduce the static scanline texture intensity */
-.scanline {
-  background: linear-gradient(to bottom, transparent 50%, rgba(255, 255, 255, 0.02) 50%);
-  background-size: 100% 8px;
-  pointer-events: none;
-  opacity: 0.2;
-}
-
-/* CRT vignette effect */
-.crt-overlay {
-  background: radial-gradient(ellipse at center, transparent 60%, rgba(0, 0, 0, 0.4) 100%);
-  pointer-events: none;
-}
-
-/* Make the moving scanline repeat less frequently */
-.moving-scanline {
-  height: 10px;
-  background: linear-gradient(to bottom, transparent, rgba(255, 255, 255, 0.1) 50%, transparent);
-  opacity: 0.5;
-  pointer-events: none;
-  animation: scan 20s linear infinite;
-}
-
-@keyframes scan {
-  0% {
-    top: -10px;
-  }
-  100% {
-    top: 100%;
-  }
-}
-
-/* We'll keep this class for the alt page */
-.gradient-bg {
-  background-image: url("/images/gradient-background.jpeg");
-  background-size: cover;
-  background-position: center;
-}
-
-/* Signature page styles */
-.signature-container {
-  background-color: transparent;
-  overflow: visible;
-}
-
-.download-button {
-  background-color: #333;
-  color: white;
-  padding: 10px 20px;
-  border-radius: 4px;
-  border: none;
-  cursor: pointer;
-  font-family: var(--font-space-mono), monospace;
-  font-size: 14px;
-  transition: background-color 0.2s;
-}
-
-.download-button:hover {
-  background-color: #555;
-}
-
-.download-button:active {
-  background-color: #222;
-}
-
-.download-button:disabled {
-  background-color: #999;
-  cursor: not-allowed;
 }
