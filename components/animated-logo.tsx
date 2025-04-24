@@ -21,7 +21,7 @@ export function AnimatedLogo() {
   return (
     <FadeIn delay={300} duration={1200} className="relative flex items-center justify-center w-full h-full">
       <h1
-        className="italic text-5xl sm:text-6xl md:text-7xl lg:text-8xl xl:text-9xl text-white animate-flicker px-4 text-center relative"
+        className="italic text-5xl sm:text-6xl md:text-7xl lg:text-8xl xl:text-9xl text-white px-4 text-center relative"
         style={{ fontFamily: "var(--font-poppins), sans-serif" }}
       >
         <span className={`font-semibold ${glowReady ? "bold-glow" : ""}`}>BOLD</span>

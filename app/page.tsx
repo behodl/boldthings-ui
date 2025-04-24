@@ -40,7 +40,7 @@ export default function Home() {
           {/* Container for content with vertical centering */}
           <div className="flex flex-col items-center justify-center">
             {/* Logo Section - Centered on page */}
-            <div>
+            <div className="subtle-flicker">
               <AnimatedLogo />
             </div>
 
@@ -55,6 +55,7 @@ export default function Home() {
                 highlightDelay={7500}
                 highlightColor="rgba(0, 0, 0, 0.5)"
                 highlightStepDuration={80}
+                enableGlitch={true}
               />
             </div>
           </div>
