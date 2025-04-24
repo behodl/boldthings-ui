@@ -4,6 +4,7 @@ import { ExternalLinkIcon } from "@/components/external-link-icon"
 import { FadeInBackground } from "@/components/fade-in-background"
 import { FadeIn } from "@/components/fade-in"
 import { HighlightedTypewriter } from "@/components/highlighted-typewriter"
+import { VHSGlitchEffect } from "@/components/vhs-glitch-effect"
 
 export default function Home() {
   const metaDescription =
@@ -26,6 +27,9 @@ export default function Home() {
       <div className="absolute inset-0 z-20 scanline"></div>
       <div className="absolute inset-0 z-20 moving-scanline"></div>
       <div className="absolute inset-0 z-20 crt-overlay"></div>
+
+      {/* VHS Glitch Effect */}
+      <VHSGlitchEffect />
 
       {/* Client Login Button - Top Right */}
       <div className="absolute top-4 right-4 z-40" style={{ pointerEvents: "auto" }}>
