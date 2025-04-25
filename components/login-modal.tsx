@@ -342,7 +342,7 @@ export function LoginModal({ isOpen, onClose }: LoginModalProps) {
                 <div className="animate-fade-in">
                   <div className="space-y-4">
                     <div className="text-center mb-4">
-                      <p className="font-space-mono text-xs text-retro-display/90">
+                      <p className="font-space-mono text-xs text-retro-display/90 max-w-[90%] mx-auto">
                         If your account exists, we've sent a magic code to{" "}
                         <span className="font-medium">{email.toLowerCase()}</span>
                       </p>
