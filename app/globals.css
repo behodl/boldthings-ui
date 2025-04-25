@@ -848,3 +848,40 @@ body {
 .animate-fade-out {
   animation: fade-out 500ms ease-in forwards;
 }
+
+/* Add these styles to the end of the file to ensure modal transitions are smooth */
+
+/* Modal specific styles */
+.modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background-color: rgba(0, 0, 0, 0.6);
+  z-index: 9998;
+  opacity: 0;
+  transition: opacity 300ms ease-out;
+}
+
+.modal-backdrop.visible {
+  opacity: 1;
+}
+
+.modal-container {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%) translateY(4px);
+  z-index: 9999;
+  opacity: 0;
+  transition: opacity 300ms ease-out, transform 300ms ease-out;
+}
+
+.modal-container.visible {
+  opacity: 1;
+  transform: translate(-50%, -50%) translateY(0);
+}
+
+/* Ensure the modal is hidden until fully ready */
+.modal-hidden {
+  visibility: hidden;
+  pointer-events: none;
+}

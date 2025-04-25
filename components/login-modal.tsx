@@ -29,21 +29,26 @@ export function LoginModal({ isOpen, onClose }: LoginModalProps) {
   const emailInputRef = useRef<HTMLInputElement>(null)
   const modalRef = useRef<HTMLDivElement>(null)
 
-  // Handle modal visibility
+  // Handle modal visibility with pre-rendering
   useEffect(() => {
     if (isOpen) {
       // First make the modal visible without animation
       setIsVisible(true)
       setIsClosing(false)
 
-      // Then trigger the fade-in animation after a tiny delay
-      // This ensures the browser has time to render the initial state
-      requestAnimationFrame(() => {
+      // Prevent background scrolling
+      document.body.style.overflow = "hidden"
+
+      // Force browser to acknowledge the modal is in the DOM before animating
+      // This prevents the flash on first render
+      const animationFrame = requestAnimationFrame(() => {
+        // This empty frame ensures the browser has processed the DOM changes
         requestAnimationFrame(() => {
-          // Using RAF twice ensures we're past the next browser paint
-          document.body.style.overflow = "hidden" // Prevent background scrolling
+          // Now it's safe to animate
         })
       })
+
+      return () => cancelAnimationFrame(animationFrame)
     } else {
       setIsClosing(true)
 
@@ -209,48 +214,49 @@ export function LoginModal({ isOpen, onClose }: LoginModalProps) {
 
   return (
     <div
-      className={cn(
-        "fixed inset-0 z-50 flex items-center justify-center",
-        isClosing ? "animate-fade-out" : "animate-fade-in",
-      )}
-      style={{ zIndex: 9999 }} // Explicitly set a very high z-index
+      className="fixed inset-0 z-50 flex items-center justify-center"
+      style={{
+        opacity: isClosing ? 0 : 1,
+        transition: "opacity 500ms ease-out",
+        zIndex: 9999, // Explicitly set a very high z-index
+      }}
     >
       {/* Backdrop without blur effect */}
       <div
-        className={cn(
-          "absolute inset-0 bg-black/60 transition-opacity duration-500",
-          isClosing ? "opacity-0" : "opacity-100",
-        )}
+        className="absolute inset-0 bg-black/60"
+        style={{
+          opacity: isClosing ? 0 : 1,
+          transition: "opacity 500ms ease-out",
+        }}
         onClick={handleClose}
       />
 
       {/* Modal container */}
       <div
         ref={modalRef}
-        className={cn(
-          "relative z-10 w-full max-w-[90%] sm:max-w-md mx-auto transition-all duration-500",
-          isClosing ? "opacity-0 translate-y-4" : "opacity-100 translate-y-0",
-        )}
+        className="relative z-10 w-full max-w-[90%] sm:max-w-md mx-auto"
         style={{
           position: "absolute",
           left: "50%",
           top: "50%",
           transform: `translate(-50%, -50%) translateY(${isClosing ? "4px" : "0"})`,
+          opacity: isClosing ? 0 : 1,
+          transition: "opacity 500ms ease-out, transform 500ms ease-out",
         }}
       >
         <div className="bg-retro-dark border border-retro-display/20 rounded-md shadow-2xl overflow-hidden">
           {/* Close button */}
           <button
             onClick={handleClose}
-            className="absolute top-2 right-2 text-retro-display/70 hover:text-retro-display transition-colors p-1"
+            className="absolute top-3 right-3 text-retro-display/60 hover:text-retro-display transition-colors p-1.5 rounded-sm hover:bg-black/20"
             type="button"
             aria-label="Close"
           >
-            <X size={16} />
+            <X size={14} />
           </button>
 
           {/* Modal content */}
-          <div className="p-3 sm:p-5">
+          <div className="p-5">
             <div className={cn("transition-opacity duration-300", isAnimating ? "opacity-0" : "opacity-100")}>
               {!isEmailSubmitted ? (
                 <div className="animate-fade-in">
@@ -274,16 +280,16 @@ export function LoginModal({ isOpen, onClose }: LoginModalProps) {
                     </div>
 
                     {/* Error message */}
-                    <div className="h-5">
+                    <div className="h-4 mb-1">
                       {errorMessage && (
-                        <div className="flex items-center text-red-400 text-xs font-space-mono mt-1 animate-fade-in">
+                        <div className="flex items-center text-red-400 text-xs font-space-mono animate-fade-in">
                           <AlertCircle size={12} className="mr-1.5" />
                           {errorMessage}
                         </div>
                       )}
                     </div>
 
-                    <div className="mt-1">
+                    <div>
                       <button
                         type="submit"
                         disabled={isLoading}
