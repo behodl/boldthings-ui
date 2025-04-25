@@ -245,15 +245,38 @@ export function LoginModal({ isOpen, onClose }: LoginModalProps) {
         }}
       >
         <div className="bg-retro-dark border border-retro-display/20 rounded-md shadow-2xl overflow-hidden">
-          {/* Close button */}
-          <button
+          {/* Close button - Completely rebuilt with inline styles for maximum control */}
+          <div
+            style={{
+              position: "absolute",
+              top: "12px",
+              right: "12px",
+              width: "24px",
+              height: "24px",
+              cursor: "pointer",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              borderRadius: "2px",
+              zIndex: 20,
+            }}
             onClick={handleClose}
-            className="absolute top-3 right-3 text-retro-display/60 hover:text-retro-display transition-all duration-300 rounded-sm hover:bg-black/20 flex items-center justify-center w-7 h-7"
-            type="button"
-            aria-label="Close"
           >
-            <X size={14} className="pointer-events-none" />
-          </button>
+            <div
+              style={{
+                width: "100%",
+                height: "100%",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                borderRadius: "2px",
+                transition: "background-color 0.3s ease",
+              }}
+              className="hover:bg-black/20"
+            >
+              <X size={14} className="text-retro-display/60 hover:text-retro-display transition-colors duration-300" />
+            </div>
+          </div>
 
           {/* Modal content */}
           <div className="p-5">
