@@ -6,6 +6,7 @@ import { FadeIn } from "./fade-in"
 export function AnimatedLogo() {
   const [mounted, setMounted] = useState(false)
   const [glowReady, setGlowReady] = useState(false)
+  const [isFlickering, setIsFlickering] = useState(false)
 
   useEffect(() => {
     setMounted(true)
@@ -15,14 +16,42 @@ export function AnimatedLogo() {
       setGlowReady(true)
     }, 800) // Reduced from 1200ms to 800ms
 
-    return () => clearTimeout(glowTimer)
+    // Set up sporadic flickering effect
+    const setupFlickerEffect = () => {
+      // Random chance of flickering (approximately once every 20-60 seconds)
+      if (Math.random() < 0.05) {
+        setIsFlickering(true)
+
+        // Flicker duration between 100ms and 300ms
+        const flickerDuration = 100 + Math.random() * 200
+
+        setTimeout(() => {
+          setIsFlickering(false)
+        }, flickerDuration)
+      }
+
+      // Schedule next potential flicker check (every 5-15 seconds)
+      const nextFlickerCheck = 5000 + Math.random() * 10000
+      setTimeout(setupFlickerEffect, nextFlickerCheck)
+    }
+
+    // Start the flicker cycle after a delay
+    const flickerStartTimer = setTimeout(setupFlickerEffect, 5000)
+
+    return () => {
+      clearTimeout(glowTimer)
+      clearTimeout(flickerStartTimer)
+    }
   }, [])
 
   return (
     <FadeIn delay={300} duration={1200} className="relative flex items-center justify-center w-full h-full">
       <h1
-        className="italic text-5xl sm:text-6xl md:text-7xl lg:text-8xl xl:text-9xl text-white px-4 text-center relative"
-        style={{ fontFamily: "var(--font-poppins), sans-serif" }}
+        className={`italic text-5xl sm:text-6xl md:text-7xl lg:text-8xl xl:text-9xl text-white px-4 text-center relative ${isFlickering ? "opacity-30" : ""}`}
+        style={{
+          fontFamily: "var(--font-poppins), sans-serif",
+          transition: isFlickering ? "none" : "opacity 100ms ease-out",
+        }}
       >
         <span className={`font-semibold ${glowReady ? "bold-glow" : ""}`}>BOLD</span>
         <span className={`font-semibold ${glowReady ? "things-glow" : ""}`}>THINGS</span>

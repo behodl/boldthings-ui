@@ -885,3 +885,38 @@ body {
   visibility: hidden;
   pointer-events: none;
 }
+
+/* Add this to the end of your globals.css file */
+
+/* Fluorescent flicker animation */
+@keyframes fluorescent-flicker {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  25% {
+    opacity: 0.3;
+  }
+  30% {
+    opacity: 0.1;
+  }
+  35% {
+    opacity: 0.5;
+  }
+  40% {
+    opacity: 0.3;
+  }
+  45% {
+    opacity: 0.8;
+  }
+  50% {
+    opacity: 0.4;
+  }
+  55% {
+    opacity: 1;
+  }
+}
+
+.fluorescent-flicker {
+  animation: fluorescent-flicker 0.2s ease-in-out;
+}

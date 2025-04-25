@@ -248,11 +248,11 @@ export function LoginModal({ isOpen, onClose }: LoginModalProps) {
           {/* Close button */}
           <button
             onClick={handleClose}
-            className="absolute top-3 right-3 text-retro-display/60 hover:text-retro-display transition-colors p-1.5 rounded-sm hover:bg-black/20"
+            className="absolute top-3 right-3 text-retro-display/60 hover:text-retro-display transition-all duration-300 rounded-sm hover:bg-black/20 flex items-center justify-center w-7 h-7"
             type="button"
             aria-label="Close"
           >
-            <X size={14} />
+            <X size={14} className="pointer-events-none" />
           </button>
 
           {/* Modal content */}
