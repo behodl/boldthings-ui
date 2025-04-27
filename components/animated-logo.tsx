@@ -55,7 +55,7 @@ export function AnimatedLogo() {
       >
         <span className={`font-semibold ${glowReady ? "bold-glow" : ""}`}>BOLD</span>
         <span className={`font-semibold ${glowReady ? "things-glow" : ""}`}>THINGS</span>
-        <span className="text-xs sm:text-sm md:text-base lg:text-lg xl:text-xl not-italic font-normal tracking-tighter opacity-70 absolute sm:top-[0.5em] top-[calc(0.5em-3px)]">
+        <span className="text-xs sm:text-sm md:text-base lg:text-lg xl:text-xl not-italic font-normal tracking-tighter opacity-70 absolute top-[calc(0.5em-3px)] sm:top-[calc(0.5em-3px)] md:top-[calc(0.5em-3px)] lg:top-[0.5em] xl:top-[0.5em]">
           ™
         </span>
       </h1>
