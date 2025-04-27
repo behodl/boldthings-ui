@@ -68,7 +68,7 @@ body {
 /* Specific adjustment for the problematic range */
 @media (min-width: 1024px) and (max-width: 1279px) {
   .tm-position {
-    top: calc(0.5em - 6px) !important; /* Extra 3px adjustment for this specific range */
+    top: calc(0.5em - 4px) !important; /* Changed from -6px to -4px (2px lower) */
   }
 }
 
