@@ -60,6 +60,25 @@ body {
   font-family: var(--font-space-mono), monospace;
 }
 
+/* TM positioning with specific breakpoint adjustments */
+.tm-position {
+  top: calc(0.5em - 3px); /* Default for mobile and smaller screens */
+}
+
+/* Specific adjustment for the problematic range */
+@media (min-width: 1024px) and (max-width: 1279px) {
+  .tm-position {
+    top: calc(0.5em - 6px) !important; /* Extra 3px adjustment for this specific range */
+  }
+}
+
+/* Reset for larger screens */
+@media (min-width: 1280px) {
+  .tm-position {
+    top: 0.5em;
+  }
+}
+
 /* Valve amp heating up glow animation for BOLD - FASTER VERSION */
 .bold-glow {
   animation: heat-up-bold 1.5s ease-out forwards, bold-pulse 5s ease-in-out infinite 1.5s;
