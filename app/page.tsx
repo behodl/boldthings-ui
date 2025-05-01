@@ -57,7 +57,7 @@ export default function Home() {
                 typewriterSpeed={35}
                 typewriterStartDelay={2500}
                 highlightDelay={7500}
-                highlightColor="rgba(0, 0, 0, 0.5)"
+                highlightColor="rgba(64, 224, 208, 0.3)"
                 highlightStepDuration={80}
                 enableGlitch={true}
               />

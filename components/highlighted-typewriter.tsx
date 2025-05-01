@@ -23,7 +23,7 @@ export function HighlightedTypewriter({
   typewriterStartDelay = 1000,
   highlightDelay = 7500,
   highlightStepDuration = 80, // Duration per character for highlighting
-  highlightColor = "rgba(0, 0, 0, 0.5)", // Changed to dark color with transparency
+  highlightColor = "rgba(64, 224, 208, 0.3)", // Updated to a soft pastel neon green with more transparency
   enableGlitch = true,
 }: HighlightedTypewriterProps) {
   const [displayedText, setDisplayedText] = useState("")
