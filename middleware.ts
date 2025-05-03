@@ -5,9 +5,21 @@ export function middleware(request: NextRequest) {
   // Get the pathname of the request
   const path = request.nextUrl.pathname
 
-  // Check if the path exists in the app
-  // This is a simplified check - in a real app you might want to check against your actual routes
-  // For now, we'll just redirect any path that would result in a 404
+  // Special handling for nostr.json
+  if (path === "/.well-known/nostr.json") {
+    const response = NextResponse.next()
+
+    // Add cache control headers
+    response.headers.set("Cache-Control", "no-cache, no-store, must-revalidate")
+    response.headers.set("Pragma", "no-cache")
+    response.headers.set("Expires", "0")
+    response.headers.set("Vercel-CDN-Cache-Control", "no-cache")
+    response.headers.set("Surrogate-Control", "no-store")
+
+    return response
+  }
+
+  // Original middleware logic for other paths
   if (
     path !== "/" &&
     !path.startsWith("/_next") &&
@@ -27,16 +39,7 @@ export function middleware(request: NextRequest) {
   return NextResponse.next()
 }
 
-// Configure matcher to run middleware on specific paths
+// Configure matcher to include .well-known paths
 export const config = {
-  matcher: [
-    /*
-     * Match all request paths except for:
-     * - _next/static (static files)
-     * - _next/image (image optimization files)
-     * - favicon.ico, favicon.svg (favicon files)
-     * - images (public image files)
-     */
-    "/((?!_next/static|_next/image|favicon.ico|favicon.svg|images).*)",
-  ],
+  matcher: ["/((?!_next/static|_next/image|favicon.ico|favicon.svg|images).*)", "/.well-known/nostr.json"],
 }
