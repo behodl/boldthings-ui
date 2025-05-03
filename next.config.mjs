@@ -9,10 +9,17 @@ const nextConfig = {
   images: {
     unoptimized: true,
   },
+  async rewrites() {
+    return [
+      {
+        source: '/.well-known/nostr.json',
+        destination: '/api/nostr',
+      },
+    ];
+  },
   async headers() {
     return [
       {
-        // Apply these headers to the nostr.json file
         source: '/.well-known/nostr.json',
         headers: [
           {
