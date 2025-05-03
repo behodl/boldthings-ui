@@ -7,16 +7,26 @@ export function middleware(request: NextRequest) {
 
   // Special handling for nostr.json
   if (path === "/.well-known/nostr.json") {
-    const response = NextResponse.next()
-
-    // Add cache control headers
-    response.headers.set("Cache-Control", "no-cache, no-store, must-revalidate")
-    response.headers.set("Pragma", "no-cache")
-    response.headers.set("Expires", "0")
-    response.headers.set("Vercel-CDN-Cache-Control", "no-cache")
-    response.headers.set("Surrogate-Control", "no-store")
-
-    return response
+    // Create a response with the correct JSON
+    return new NextResponse(
+      JSON.stringify({
+        names: {
+          mndwave: "2af00a5a89cab5c913ff461be86add21025ba6fe66dfd9d0e82b9488cb8d2f3d",
+        },
+      }),
+      {
+        status: 200,
+        headers: {
+          "Content-Type": "application/json",
+          "Cache-Control": "no-cache, no-store, must-revalidate",
+          Pragma: "no-cache",
+          Expires: "0",
+          "Access-Control-Allow-Origin": "*",
+          "Vercel-CDN-Cache-Control": "no-cache",
+          "Surrogate-Control": "no-store",
+        },
+      },
+    )
   }
 
   // Original middleware logic for other paths
