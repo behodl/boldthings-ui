@@ -9,14 +9,16 @@ const nextConfig = {
   images: {
     unoptimized: true,
   },
+  // Use a completely different approach with rewrites
   async rewrites() {
     return [
       {
         source: '/.well-known/nostr.json',
-        destination: '/api/nostr',
+        destination: '/api/nostr-verification',
       },
     ];
   },
+  // Keep the headers for other potential static files
   async headers() {
     return [
       {
@@ -33,14 +35,6 @@ const nextConfig = {
           {
             key: 'Cache-Control',
             value: 'no-cache, no-store, must-revalidate',
-          },
-          {
-            key: 'Pragma',
-            value: 'no-cache',
-          },
-          {
-            key: 'Expires',
-            value: '0',
           },
         ],
       },
