@@ -1,0 +1,13 @@
+{
+  "version": 2,
+  "routes": [
+    {
+      "src": "/audio/(.*)",
+      "headers": {
+        "cache-control": "public, max-age=0, must-revalidate",
+        "content-type": "audio/mpeg"
+      },
+      "continue": true
+    }
+  ]
+}
