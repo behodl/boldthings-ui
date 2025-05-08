@@ -4,6 +4,7 @@ import { Poppins, Space_Mono } from "next/font/google"
 import "./globals.css"
 import { ThemeProvider } from "@/components/theme-provider"
 import Script from "next/script"
+import { AudioPlayer } from "@/components/audio-player"
 
 // Add Poppins font with the weights we need
 const poppins = Poppins({
@@ -76,6 +77,7 @@ export default function RootLayout({
       <body className={`${poppins.variable} ${spaceMono.variable}`}>
         <ThemeProvider attribute="class" defaultTheme="dark">
           {children}
+          <AudioPlayer audioSrc="/audio/F4LC0N.mp3" className="audio-player-enter" />
         </ThemeProvider>
       </body>
     </html>
