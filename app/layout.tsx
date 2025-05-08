@@ -77,7 +77,7 @@ export default function RootLayout({
       <body className={`${poppins.variable} ${spaceMono.variable}`}>
         <ThemeProvider attribute="class" defaultTheme="dark">
           {children}
-          <AudioPlayer audioSrc="/audio/F4LC0N.mp3" className="audio-player-enter" />
+          <AudioPlayer audioSrc="/audio/F4LC0N.mp3" className="audio-player-enter" key="audio-player" />
         </ThemeProvider>
       </body>
     </html>

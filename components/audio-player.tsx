@@ -64,7 +64,10 @@ export function AudioPlayer({ audioSrc, className }: AudioPlayerProps) {
     const audio = audioRef.current
     if (!audio) return
 
+    console.log("Attempting to load audio from:", audioSrc)
+
     const handleLoadedMetadata = () => {
+      console.log("Audio metadata loaded successfully")
       if (audio.duration && !isNaN(audio.duration) && audio.duration !== Number.POSITIVE_INFINITY) {
         setDuration(audio.duration)
       }
@@ -77,9 +80,14 @@ export function AudioPlayer({ audioSrc, className }: AudioPlayerProps) {
     }
 
     const handleCanPlayThrough = () => {
+      console.log("Audio can play through")
       if (audio.duration && !isNaN(audio.duration) && audio.duration !== Number.POSITIVE_INFINITY) {
         setDuration(audio.duration)
       }
+    }
+
+    const handleError = (e: ErrorEvent) => {
+      console.error("Audio loading error:", e)
     }
 
     const handleTimeUpdate = () => {
@@ -89,6 +97,7 @@ export function AudioPlayer({ audioSrc, className }: AudioPlayerProps) {
     audio.addEventListener("loadedmetadata", handleLoadedMetadata)
     audio.addEventListener("canplaythrough", handleCanPlayThrough)
     audio.addEventListener("timeupdate", handleTimeUpdate)
+    audio.addEventListener("error", handleError as EventListener)
 
     // Start loading the audio
     audio.load()
@@ -97,6 +106,7 @@ export function AudioPlayer({ audioSrc, className }: AudioPlayerProps) {
       audio.removeEventListener("loadedmetadata", handleLoadedMetadata)
       audio.removeEventListener("canplaythrough", handleCanPlayThrough)
       audio.removeEventListener("timeupdate", handleTimeUpdate)
+      audio.removeEventListener("error", handleError as EventListener)
     }
   }, [audioSrc, isMobile])
 
@@ -375,8 +385,8 @@ export function AudioPlayer({ audioSrc, className }: AudioPlayerProps) {
         className,
       )}
     >
-      <div className="max-w-7xl mx-auto h-full relative">
-        <div className="relative z-10 flex items-center justify-between h-full px-3">
+      <div className="w-full h-full relative">
+        <div className="relative z-10 flex items-center justify-between h-full px-4 md:px-6">
           {/* Left: Play button and track info */}
           <div className={cn("flex items-center", isMobile ? "w-1/3" : "w-1/4")}>
             <button
@@ -572,7 +582,7 @@ export function AudioPlayer({ audioSrc, className }: AudioPlayerProps) {
         </div>
       </div>
 
-      <audio ref={audioRef} src={audioSrc} preload="metadata" />
+      <audio ref={audioRef} src={audioSrc} preload="auto" crossOrigin="anonymous" />
     </div>
   )
 }
