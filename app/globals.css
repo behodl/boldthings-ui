@@ -23,6 +23,11 @@
   --input: 214.3 31.8% 91.4%;
   --ring: 222.2 84% 4.9%;
   --radius: 0.5rem;
+
+  /* Add these z-index values */
+  --z-audio-player: 30;
+  --z-modal-backdrop: 40;
+  --z-modal-content: 60;
 }
 
 .dark {

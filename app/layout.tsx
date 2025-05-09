@@ -77,7 +77,11 @@ export default function RootLayout({
       <body className={`${poppins.variable} ${spaceMono.variable}`}>
         <ThemeProvider attribute="class" defaultTheme="dark">
           {children}
-          <AudioPlayer className="audio-player-enter" key="audio-player" />
+          <AudioPlayer
+            audioSrc="https://media.boldthin.gs/F4LC0N.mp3"
+            className="audio-player-enter"
+            key="audio-player"
+          />
         </ThemeProvider>
       </body>
     </html>

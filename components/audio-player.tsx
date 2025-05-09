@@ -3,7 +3,7 @@
 import type React from "react"
 
 import { useEffect, useRef, useState } from "react"
-import { Play, Pause, Volume2, VolumeX, Repeat, AlertTriangle, RotateCw } from "lucide-react"
+import { Play, Volume2, VolumeX, Repeat } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { useIsMobile } from "@/hooks/use-mobile"
 
@@ -18,16 +18,13 @@ export function AudioPlayer({ audioSrc = "https://media.boldthin.gs/F4LC0N.mp3",
 
   // Audio state
   const [isPlaying, setIsPlaying] = useState(false)
-  const [duration, setDuration] = useState(180) // Default to 3 minutes
+  const [duration, setDuration] = useState(0)
   const [currentTime, setCurrentTime] = useState(0)
   const [volume, setVolume] = useState(0.75)
   const [isMuted, setIsMuted] = useState(false)
   const [isLooping, setIsLooping] = useState(false)
   const [isLoaded, setIsLoaded] = useState(false)
   const [isVisible, setIsVisible] = useState(false)
-  const [audioError, setAudioError] = useState<string | null>(null)
-  const [usingFallback, setUsingFallback] = useState(false)
-  const [isRetrying, setIsRetrying] = useState(false)
 
   // UI state
   const [isVolumeVisible, setIsVolumeVisible] = useState(false)
@@ -43,9 +40,6 @@ export function AudioPlayer({ audioSrc = "https://media.boldthin.gs/F4LC0N.mp3",
   const waveformRef = useRef<HTMLDivElement>(null)
   const volumeTrackRef = useRef<HTMLDivElement>(null)
   const flickerTimerRef = useRef<NodeJS.Timeout | null>(null)
-  const audioContextRef = useRef<AudioContext | null>(null)
-  const oscillatorRef = useRef<OscillatorNode | null>(null)
-  const gainNodeRef = useRef<GainNode | null>(null)
   const mountedRef = useRef(false)
 
   // Set up flicker effect on mount
@@ -69,14 +63,6 @@ export function AudioPlayer({ audioSrc = "https://media.boldthin.gs/F4LC0N.mp3",
         clearTimeout(flickerTimerRef.current)
       }
       clearTimeout(fadeInTimer)
-
-      // Clean up audio context if it exists
-      if (audioContextRef.current) {
-        if (oscillatorRef.current) {
-          oscillatorRef.current.stop()
-        }
-        audioContextRef.current.close().catch(console.error)
-      }
     }
   }, [])
 
@@ -113,84 +99,13 @@ export function AudioPlayer({ audioSrc = "https://media.boldthin.gs/F4LC0N.mp3",
     }, 100)
   }
 
-  // Set up tone generator as fallback
-  const setupToneGenerator = () => {
-    try {
-      console.log("Setting up tone generator as fallback")
-
-      // Create audio context if it doesn't exist
-      if (!audioContextRef.current) {
-        audioContextRef.current = new (window.AudioContext || (window as any).webkitAudioContext)()
-      }
-
-      const ctx = audioContextRef.current
-
-      // Create oscillator and gain node
-      const oscillator = ctx.createOscillator()
-      const gainNode = ctx.createGain()
-
-      // Configure oscillator
-      oscillator.type = "sine"
-      oscillator.frequency.setValueAtTime(440, ctx.currentTime) // A4 note
-
-      // Configure gain (volume)
-      gainNode.gain.setValueAtTime(0, ctx.currentTime) // Start silent
-
-      // Connect nodes
-      oscillator.connect(gainNode)
-      gainNode.connect(ctx.destination)
-
-      // Start oscillator
-      oscillator.start()
-
-      // Store references
-      oscillatorRef.current = oscillator
-      gainNodeRef.current = gainNode
-
-      // Set as loaded
-      if (mountedRef.current) {
-        setIsLoaded(true)
-        setDuration(180) // Default to 3 minutes for tone generator
-        setUsingFallback(true)
-        setAudioError("Using tone generator (audio format not supported)")
-      }
-
-      console.log("Tone generator ready")
-    } catch (error) {
-      console.error("Failed to set up tone generator:", error)
-      if (mountedRef.current) {
-        setAudioError("All audio playback methods failed")
-      }
-    }
-  }
-
-  // Play/pause the tone generator
-  const controlToneGenerator = (play: boolean) => {
-    if (!audioContextRef.current || !gainNodeRef.current) return
-
-    const ctx = audioContextRef.current
-    const gainNode = gainNodeRef.current
-
-    if (play) {
-      // Fade in
-      gainNode.gain.cancelScheduledValues(ctx.currentTime)
-      gainNode.gain.setValueAtTime(gainNode.gain.value, ctx.currentTime)
-      gainNode.gain.linearRampToValueAtTime(volume, ctx.currentTime + 0.1)
-    } else {
-      // Fade out
-      gainNode.gain.cancelScheduledValues(ctx.currentTime)
-      gainNode.gain.setValueAtTime(gainNode.gain.value, ctx.currentTime)
-      gainNode.gain.linearRampToValueAtTime(0, ctx.currentTime + 0.1)
-    }
-  }
-
   // Initialize audio player
   useEffect(() => {
     // Generate placeholder waveform immediately
     generatePlaceholderWaveform()
 
     // Create a new audio element
-    const audio = new Audio()
+    const audio = new Audio(audioSrc)
     audio.crossOrigin = "anonymous"
     audio.preload = "auto"
 
@@ -201,11 +116,7 @@ export function AudioPlayer({ audioSrc = "https://media.boldthin.gs/F4LC0N.mp3",
     audio.addEventListener("loadedmetadata", handleLoadedMetadata)
     audio.addEventListener("canplaythrough", handleCanPlayThrough)
     audio.addEventListener("timeupdate", handleTimeUpdate)
-    audio.addEventListener("error", handleError)
     audio.addEventListener("ended", handleEnded)
-
-    // Try to load the audio
-    loadAudio()
 
     // Clean up
     return () => {
@@ -213,89 +124,9 @@ export function AudioPlayer({ audioSrc = "https://media.boldthin.gs/F4LC0N.mp3",
       audio.removeEventListener("loadedmetadata", handleLoadedMetadata)
       audio.removeEventListener("canplaythrough", handleCanPlayThrough)
       audio.removeEventListener("timeupdate", handleTimeUpdate)
-      audio.removeEventListener("error", handleError)
       audio.removeEventListener("ended", handleEnded)
     }
   }, [audioSrc])
-
-  // Load audio with fallback
-  const loadAudio = () => {
-    if (!audioRef.current || !mountedRef.current) return
-
-    console.log("Attempting to load audio from:", audioSrc)
-    setAudioError(null)
-    setUsingFallback(false)
-    setIsLoaded(false)
-    setIsRetrying(false)
-
-    try {
-      // Set source and load
-      audioRef.current.src = audioSrc
-      audioRef.current.load()
-
-      // Set up a timeout to switch to tone generator if loading takes too long
-      const timeoutId = setTimeout(() => {
-        if (!isLoaded && mountedRef.current) {
-          console.log("Audio loading timed out, using tone generator")
-          setupToneGenerator()
-        }
-      }, 5000) // 5 second timeout
-
-      return () => clearTimeout(timeoutId)
-    } catch (e) {
-      console.error("Error during audio loading:", e)
-      setupToneGenerator()
-    }
-  }
-
-  // Retry loading audio
-  const retryAudio = () => {
-    if (!mountedRef.current) return
-
-    setIsRetrying(true)
-
-    // Clean up existing audio context if using fallback
-    if (usingFallback && audioContextRef.current) {
-      if (oscillatorRef.current) {
-        oscillatorRef.current.stop()
-      }
-      audioContextRef.current.close().catch(console.error)
-      audioContextRef.current = null
-      oscillatorRef.current = null
-      gainNodeRef.current = null
-    }
-
-    // Reset state
-    setIsPlaying(false)
-    setCurrentTime(0)
-    setAudioError(null)
-    setUsingFallback(false)
-    setIsLoaded(false)
-
-    // Try loading with cache-busting parameter
-    if (audioRef.current) {
-      const cacheBuster = Date.now()
-      const url = audioSrc.includes("?") ? `${audioSrc}&cb=${cacheBuster}` : `${audioSrc}?cb=${cacheBuster}`
-
-      console.log("Retrying audio load with:", url)
-      audioRef.current.src = url
-      audioRef.current.load()
-
-      // Set timeout to fall back to tone generator
-      setTimeout(() => {
-        if (!isLoaded && mountedRef.current) {
-          console.log("Retry timed out, using tone generator")
-          setupToneGenerator()
-        }
-        if (mountedRef.current) {
-          setIsRetrying(false)
-        }
-      }, 5000)
-    } else {
-      setIsRetrying(false)
-      setupToneGenerator()
-    }
-  }
 
   // Event handlers
   const handleLoadedMetadata = () => {
@@ -310,7 +141,6 @@ export function AudioPlayer({ audioSrc = "https://media.boldthin.gs/F4LC0N.mp3",
       setDuration(audioRef.current.duration)
     }
     setIsLoaded(true)
-    setAudioError(null)
   }
 
   const handleCanPlayThrough = () => {
@@ -326,44 +156,13 @@ export function AudioPlayer({ audioSrc = "https://media.boldthin.gs/F4LC0N.mp3",
     }
   }
 
-  const handleError = (e: Event) => {
-    if (!mountedRef.current) return
-
-    const audio = e.target as HTMLAudioElement
-    let errorMessage = "Unknown audio error"
-
-    if (audio.error) {
-      const errorCode = audio.error.code
-      switch (errorCode) {
-        case 1:
-          errorMessage = "Audio loading aborted"
-          break
-        case 2:
-          errorMessage = "Network error while loading audio"
-          break
-        case 3:
-          errorMessage = "Audio format not supported"
-          break
-        case 4:
-          errorMessage = "Audio not supported"
-          break
-      }
-    }
-
-    console.error("Audio loading error:", e, audio.error)
-    setAudioError(errorMessage)
-
-    // For any error, use tone generator
-    setupToneGenerator()
-  }
-
   const handleTimeUpdate = () => {
-    if (!audioRef.current || usingFallback || !mountedRef.current) return
+    if (!audioRef.current || !mountedRef.current) return
     setCurrentTime(audioRef.current.currentTime)
   }
 
   const handleEnded = () => {
-    if (usingFallback || !mountedRef.current) return
+    if (!mountedRef.current) return
 
     if (!isLooping) {
       setIsPlaying(false)
@@ -376,12 +175,6 @@ export function AudioPlayer({ audioSrc = "https://media.boldthin.gs/F4LC0N.mp3",
 
   // Handle play/pause
   useEffect(() => {
-    // If using tone generator, control it directly
-    if (usingFallback) {
-      controlToneGenerator(isPlaying)
-      return
-    }
-
     const audio = audioRef.current
     if (!audio) return
 
@@ -393,37 +186,20 @@ export function AudioPlayer({ audioSrc = "https://media.boldthin.gs/F4LC0N.mp3",
           if (mountedRef.current) {
             setIsPlaying(false)
           }
-
-          // If autoplay is prevented, show a message
-          if (error.name === "NotAllowedError") {
-            if (mountedRef.current) {
-              setAudioError("Playback was prevented by the browser. Please click play again.")
-            }
-          } else {
-            // For other errors, use the tone generator
-            setupToneGenerator()
-          }
         })
       }
     } else {
       audio.pause()
     }
-  }, [isPlaying, usingFallback])
+  }, [isPlaying])
 
   // Handle volume change
   useEffect(() => {
-    // If using tone generator, update its volume
-    if (usingFallback && gainNodeRef.current && isPlaying) {
-      const actualVolume = isMuted ? 0 : volume
-      gainNodeRef.current.gain.setValueAtTime(actualVolume, audioContextRef.current?.currentTime || 0)
-      return
-    }
-
     const audio = audioRef.current
     if (!audio) return
 
     audio.volume = isMuted ? 0 : volume
-  }, [volume, isMuted, usingFallback, isPlaying])
+  }, [volume, isMuted])
 
   // Handle loop setting
   useEffect(() => {
@@ -432,40 +208,6 @@ export function AudioPlayer({ audioSrc = "https://media.boldthin.gs/F4LC0N.mp3",
 
     audio.loop = isLooping
   }, [isLooping])
-
-  // Update time for tone generator
-  useEffect(() => {
-    if (!usingFallback || !isPlaying || !mountedRef.current) return
-
-    let startTime = Date.now() - currentTime * 1000
-    let animationId: number
-
-    const updateTime = () => {
-      if (!mountedRef.current) return
-
-      const elapsed = (Date.now() - startTime) / 1000
-      setCurrentTime(elapsed)
-
-      if (elapsed >= duration && !isLooping) {
-        setIsPlaying(false)
-        setCurrentTime(0)
-        return
-      }
-
-      if (elapsed >= duration && isLooping) {
-        startTime = Date.now()
-        setCurrentTime(0)
-      }
-
-      animationId = requestAnimationFrame(updateTime)
-    }
-
-    animationId = requestAnimationFrame(updateTime)
-
-    return () => {
-      cancelAnimationFrame(animationId)
-    }
-  }, [usingFallback, isPlaying, isLooping, duration, currentTime])
 
   // Set up flicker effect
   const setupFlickerEffect = () => {
@@ -504,17 +246,7 @@ export function AudioPlayer({ audioSrc = "https://media.boldthin.gs/F4LC0N.mp3",
   // Handle click on waveform
   const handleWaveformClick = (e: React.MouseEvent<HTMLDivElement>) => {
     const waveform = waveformRef.current
-    if (!waveform) return
-
-    // If using tone generator, just toggle play state
-    if (usingFallback) {
-      if (!isPlaying) {
-        setIsPlaying(true)
-      }
-      return
-    }
-
-    if (!audioRef.current) return
+    if (!waveform || !audioRef.current) return
 
     const rect = waveform.getBoundingClientRect()
     const clickPosition = (e.clientX - rect.left) / rect.width
@@ -533,15 +265,6 @@ export function AudioPlayer({ audioSrc = "https://media.boldthin.gs/F4LC0N.mp3",
   // Handle progress bar click (for mobile)
   const handleProgressBarClick = (e: React.MouseEvent<HTMLDivElement>) => {
     const progressBar = e.currentTarget
-
-    // If using tone generator, just toggle play state
-    if (usingFallback) {
-      if (!isPlaying) {
-        setIsPlaying(true)
-      }
-      return
-    }
-
     if (!progressBar || !audioRef.current) return
 
     const rect = progressBar.getBoundingClientRect()
@@ -657,16 +380,10 @@ export function AudioPlayer({ audioSrc = "https://media.boldthin.gs/F4LC0N.mp3",
     }
   }, [isVolumeVisible])
 
-  // Get audio source display name
-  const getAudioSourceName = () => {
-    if (usingFallback) return "Tone Generator"
-    return "F4LC0N"
-  }
-
   return (
     <div
       className={cn(
-        "fixed bottom-0 left-0 right-0 z-40 bg-black/60 backdrop-blur-sm border-t border-retro-display/10",
+        "fixed bottom-0 left-0 right-0 z-30 bg-black/60 backdrop-blur-sm border-t border-retro-display/10",
         "h-10 transition-opacity duration-700",
         isVisible ? "opacity-100" : "opacity-0",
         className,
@@ -685,34 +402,13 @@ export function AudioPlayer({ audioSrc = "https://media.boldthin.gs/F4LC0N.mp3",
                   : "bg-black/40 text-retro-display/60 hover:bg-black/60 hover:text-retro-display/80",
               )}
               aria-label={isPlaying ? "Pause" : "Play"}
-              disabled={isRetrying}
             >
-              {isPlaying ? <Pause className="h-3 w-3" /> : <Play className="h-3 w-3 ml-0.5" />}
+              {/* Always show Play icon, regardless of state */}
+              <Play className="h-3 w-3 ml-0.5" />
             </button>
 
             <div className="ml-3 flex items-center">
-              <div className="text-xs font-medium text-retro-display truncate">{getAudioSourceName()}</div>
-              {audioError && (
-                <div className="ml-2 text-amber-400 flex items-center" title={audioError}>
-                  <AlertTriangle className="h-3 w-3" />
-                  {!isRetrying && (
-                    <button
-                      onClick={retryAudio}
-                      className="ml-2 text-[9px] text-retro-teal hover:text-retro-teal/80 transition-colors flex items-center"
-                      title="Retry loading audio"
-                    >
-                      {isRetrying ? (
-                        <>
-                          <RotateCw className="h-2 w-2 mr-1 animate-spin" />
-                          Retrying...
-                        </>
-                      ) : (
-                        "Retry"
-                      )}
-                    </button>
-                  )}
-                </div>
-              )}
+              <div className="text-xs font-medium text-retro-display truncate">F4LC0N</div>
             </div>
           </div>
 

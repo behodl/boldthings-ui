@@ -218,7 +218,6 @@ export function LoginModal({ isOpen, onClose }: LoginModalProps) {
       style={{
         opacity: isClosing ? 0 : 1,
         transition: "opacity 500ms ease-out",
-        zIndex: 9999, // Explicitly set a very high z-index
       }}
     >
       {/* Backdrop without blur effect */}
@@ -227,6 +226,7 @@ export function LoginModal({ isOpen, onClose }: LoginModalProps) {
         style={{
           opacity: isClosing ? 0 : 1,
           transition: "opacity 500ms ease-out",
+          zIndex: 1, // Lower z-index within the modal container
         }}
         onClick={handleClose}
       />
@@ -234,14 +234,13 @@ export function LoginModal({ isOpen, onClose }: LoginModalProps) {
       {/* Modal container */}
       <div
         ref={modalRef}
-        className="relative z-10 w-full max-w-[90%] sm:max-w-md mx-auto"
+        className="relative w-full max-w-[90%] sm:max-w-md mx-auto"
         style={{
-          position: "absolute",
-          left: "50%",
-          top: "50%",
-          transform: `translate(-50%, -50%) translateY(${isClosing ? "4px" : "0"})`,
+          position: "relative",
+          zIndex: 2, // Higher z-index than the backdrop
           opacity: isClosing ? 0 : 1,
           transition: "opacity 500ms ease-out, transform 500ms ease-out",
+          transform: `translateY(${isClosing ? "4px" : "0"})`,
         }}
       >
         <div className="bg-retro-dark border border-retro-display/20 rounded-md shadow-2xl overflow-hidden">
@@ -258,7 +257,7 @@ export function LoginModal({ isOpen, onClose }: LoginModalProps) {
               alignItems: "center",
               justifyContent: "center",
               borderRadius: "2px",
-              zIndex: 20,
+              zIndex: 3,
             }}
             onClick={handleClose}
           >
