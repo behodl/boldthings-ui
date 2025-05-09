@@ -1026,3 +1026,40 @@ input[type="range"]::-moz-range-thumb:hover {
 .waveform-glow {
   animation: waveform-glow 5s ease-in-out infinite;
 }
+
+/* Add this new CSS class for text glitching in the audio player */
+.glitch-text {
+  position: relative;
+  display: inline-block;
+}
+
+.glitch-text.glitching {
+  animation: text-glitch 0.2s ease-in-out;
+}
+
+@keyframes text-glitch {
+  0% {
+    transform: translateX(0);
+    opacity: 1;
+  }
+  20% {
+    transform: translateX(-2px);
+    opacity: 0.8;
+  }
+  40% {
+    transform: translateX(2px);
+    opacity: 0.9;
+  }
+  60% {
+    transform: translateX(-1px);
+    opacity: 0.8;
+  }
+  80% {
+    transform: translateX(1px);
+    opacity: 0.9;
+  }
+  100% {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}

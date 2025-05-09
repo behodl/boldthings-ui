@@ -34,11 +34,12 @@ export function AudioPlayer({ audioSrc = "https://media.boldthin.gs/F4LC0N.mp3",
 
   // Visual effects state
   const [flickerState, setFlickerState] = useState(false)
+  const [isTextGlitching, setIsTextGlitching] = useState(false)
 
   // Refs
   const audioRef = useRef<HTMLAudioElement | null>(null)
-  const waveformRef = useRef<HTMLDivElement>(null)
-  const volumeTrackRef = useRef<HTMLDivElement>(null)
+  const waveformRef = useRef<HTMLDivElement | null>(null)
+  const volumeTrackRef = useRef<HTMLDivElement | null>(null)
   const flickerTimerRef = useRef<NodeJS.Timeout | null>(null)
   const mountedRef = useRef(false)
 
@@ -380,6 +381,37 @@ export function AudioPlayer({ audioSrc = "https://media.boldthin.gs/F4LC0N.mp3",
     }
   }, [isVolumeVisible])
 
+  // Set up text glitch effect
+  useEffect(() => {
+    if (!mountedRef.current) return
+
+    const triggerTextGlitch = () => {
+      if (Math.random() < 0.1) {
+        // 10% chance of glitching
+        setIsTextGlitching(true)
+
+        // Glitch duration between 100ms and 300ms
+        const glitchDuration = 100 + Math.random() * 200
+        setTimeout(() => {
+          if (mountedRef.current) {
+            setIsTextGlitching(false)
+          }
+        }, glitchDuration)
+      }
+
+      // Schedule next potential glitch (between 5-15 seconds)
+      const nextGlitchDelay = 5000 + Math.random() * 10000
+      setTimeout(triggerTextGlitch, nextGlitchDelay)
+    }
+
+    // Start the glitch cycle after a delay
+    const initialDelay = setTimeout(triggerTextGlitch, 5000)
+
+    return () => {
+      clearTimeout(initialDelay)
+    }
+  }, [])
+
   return (
     <div
       className={cn(
@@ -408,7 +440,11 @@ export function AudioPlayer({ audioSrc = "https://media.boldthin.gs/F4LC0N.mp3",
             </button>
 
             <div className="ml-3 flex items-center">
-              <div className="text-xs font-medium text-retro-display truncate">F4LC0N</div>
+              <div
+                className={`font-space-mono text-xs font-medium text-retro-display truncate glitch-text ${isTextGlitching ? "glitching" : ""}`}
+              >
+                F4LC0N
+              </div>
             </div>
           </div>
 
@@ -477,7 +513,9 @@ export function AudioPlayer({ audioSrc = "https://media.boldthin.gs/F4LC0N.mp3",
           {/* Right: Time and controls - Simplified on mobile */}
           <div className={cn("flex items-center justify-end", isMobile ? "w-1/3 space-x-2" : "w-1/4 space-x-3")}>
             {/* Time display - Always visible */}
-            <div className="font-space-mono text-[10px] text-retro-display/80">
+            <div
+              className={`font-space-mono text-[10px] text-retro-display/80 glitch-text ${isTextGlitching ? "glitching" : ""}`}
+            >
               <span>{formatTime(currentTime)}</span>
               {!isMobile && (
                 <>
@@ -536,7 +574,11 @@ export function AudioPlayer({ audioSrc = "https://media.boldthin.gs/F4LC0N.mp3",
               >
                 <div className="flex flex-col items-center justify-between h-[120px]">
                   {/* Volume value display */}
-                  <div className="font-space-mono text-[10px] text-retro-display/70">{Math.round(volume * 100)}%</div>
+                  <div
+                    className={`font-space-mono text-[10px] text-retro-display/70 glitch-text ${isTextGlitching ? "glitching" : ""}`}
+                  >
+                    {Math.round(volume * 100)}%
+                  </div>
 
                   {/* Minimal fader */}
                   <div className="relative" style={{ width: "4px", height: "80px" }}>
