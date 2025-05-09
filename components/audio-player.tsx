@@ -103,6 +103,7 @@ export function AudioPlayer({ audioSrc = "https://media.boldthin.gs/F4LC0N.mp3",
   useEffect(() => {
     // Generate placeholder waveform immediately
     generatePlaceholderWaveform()
+    console.log("Waveform data generated:", waveformData.length, "points")
 
     // Create a new audio element
     const audio = new Audio(audioSrc)
@@ -397,7 +398,7 @@ export function AudioPlayer({ audioSrc = "https://media.boldthin.gs/F4LC0N.mp3",
             </button>
 
             <div className="ml-3 flex items-center">
-              <div className="text-xs font-medium text-retro-display truncate">F4LC0N</div>
+              <div className="font-space-mono font-bold text-xs text-retro-display truncate">F4LC0N</div>
             </div>
           </div>
 
@@ -414,7 +415,8 @@ export function AudioPlayer({ audioSrc = "https://media.boldthin.gs/F4LC0N.mp3",
                   )}
                 >
                   {waveformData.map((value, index) => {
-                    const height = Math.max(2, value * (isMobile ? 10 : 18)) // Smaller height on mobile
+                    // Ensure minimum height is visible on all devices
+                    const height = Math.max(isMobile ? 3 : 2, value * (isMobile ? 12 : 18))
                     const isPlayed = (index / waveformData.length) * 100 <= playbackProgress
 
                     return (
