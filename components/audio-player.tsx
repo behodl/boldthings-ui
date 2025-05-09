@@ -529,9 +529,9 @@ export function AudioPlayer({ audioSrc = "https://media.boldthin.gs/F4LC0N.mp3",
               <div
                 id="volume-controls"
                 className={cn(
-                  "absolute bottom-full right-[-4px] mb-3 bg-black/80 backdrop-blur-sm",
+                  "absolute bottom-full mb-3 bg-black/80 backdrop-blur-sm",
                   "border border-retro-display/20 rounded-md shadow-lg",
-                  "transform transition-all duration-300 origin-bottom-right",
+                  "transform transition-all duration-300 origin-bottom-center",
                   isVolumeVisible
                     ? "opacity-100 translate-y-0 scale-100"
                     : "opacity-0 translate-y-2 scale-95 pointer-events-none",
@@ -540,6 +540,8 @@ export function AudioPlayer({ audioSrc = "https://media.boldthin.gs/F4LC0N.mp3",
                   boxShadow: "0 0 15px rgba(0, 0, 0, 0.3), 0 0 5px rgba(94, 191, 181, 0.2)",
                   width: "40px", // Increased width for more padding and touch area
                   padding: "14px", // Even padding on all sides
+                  left: "50%",
+                  transform: `translateX(-50%) ${isVolumeVisible ? "translateY(0) scale(1)" : "translateY(2px) scale(0.95)"}`,
                 }}
               >
                 <div className="flex flex-col items-center justify-between h-[120px]">
