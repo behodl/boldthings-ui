@@ -3,16 +3,19 @@
 import type React from "react"
 
 import { useEffect, useRef, useState } from "react"
-import { Play, Volume2, VolumeX, Repeat } from "lucide-react"
+import { Play, Pause, Volume2, VolumeX, Repeat, AlertCircle } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { useIsMobile } from "@/hooks/use-mobile"
 
 interface AudioPlayerProps {
-  audioSrc: string
+  audioSrc?: string
   className?: string
 }
 
-export function AudioPlayer({ audioSrc, className }: AudioPlayerProps) {
+export function AudioPlayer({
+  audioSrc = "https://audio.nostr.build/1b6fdfffa97558d65f2129e891077574f9bfe0ea63d3dced485b99a8135d663d.mp3",
+  className,
+}: AudioPlayerProps) {
   // Responsive state
   const isMobile = useIsMobile()
 
@@ -25,6 +28,9 @@ export function AudioPlayer({ audioSrc, className }: AudioPlayerProps) {
   const [isLooping, setIsLooping] = useState(false)
   const [isLoaded, setIsLoaded] = useState(false)
   const [isVisible, setIsVisible] = useState(false)
+  const [currentAudioSrc, setCurrentAudioSrc] = useState(audioSrc)
+  const [audioError, setAudioError] = useState<string | null>(null)
+  const [loadAttempts, setLoadAttempts] = useState(0)
 
   // UI state
   const [isVolumeVisible, setIsVolumeVisible] = useState(false)
@@ -40,6 +46,46 @@ export function AudioPlayer({ audioSrc, className }: AudioPlayerProps) {
   const waveformRef = useRef<HTMLDivElement>(null)
   const volumeTrackRef = useRef<HTMLDivElement>(null)
   const flickerTimerRef = useRef<NodeJS.Timeout | null>(null)
+
+  // Check for custom audio URL in localStorage on mount
+  useEffect(() => {
+    const customAudio = localStorage.getItem("boldthings-custom-audio")
+    if (customAudio) {
+      console.log("Loading custom audio from localStorage:", customAudio)
+      setCurrentAudioSrc(customAudio)
+    }
+  }, [])
+
+  // Listen for custom audio update events
+  useEffect(() => {
+    const handleAudioUpdate = (event: CustomEvent) => {
+      const { url } = event.detail
+      console.log("Received audio update event with URL:", url)
+      setCurrentAudioSrc(url)
+      setAudioError(null) // Reset any previous errors
+      setLoadAttempts(0) // Reset load attempts
+
+      // Reset player state
+      setCurrentTime(0)
+      setIsPlaying(false)
+      setIsWaveformLoaded(false)
+
+      // Generate new waveform after a short delay
+      setTimeout(() => {
+        if (!isMobile) {
+          generateWaveformData()
+        }
+      }, 500)
+    }
+
+    // Add event listener
+    window.addEventListener("boldthings-audio-update", handleAudioUpdate as EventListener)
+
+    // Clean up
+    return () => {
+      window.removeEventListener("boldthings-audio-update", handleAudioUpdate as EventListener)
+    }
+  }, [isMobile])
 
   // Set up flicker effect on mount
   useEffect(() => {
@@ -64,7 +110,9 @@ export function AudioPlayer({ audioSrc, className }: AudioPlayerProps) {
     const audio = audioRef.current
     if (!audio) return
 
-    console.log("Attempting to load audio from:", audioSrc)
+    console.log("Attempting to load audio from:", currentAudioSrc)
+    setAudioError(null) // Reset error state when trying to load new audio
+    setIsLoaded(false)
 
     const handleLoadedMetadata = () => {
       console.log("Audio metadata loaded successfully")
@@ -72,6 +120,7 @@ export function AudioPlayer({ audioSrc, className }: AudioPlayerProps) {
         setDuration(audio.duration)
       }
       setIsLoaded(true)
+      setAudioError(null) // Clear any previous errors
 
       // Only generate waveform on non-mobile devices
       if (!isMobile) {
@@ -86,8 +135,36 @@ export function AudioPlayer({ audioSrc, className }: AudioPlayerProps) {
       }
     }
 
-    const handleError = (e: ErrorEvent) => {
-      console.error("Audio loading error:", e)
+    const handleError = (e: Event) => {
+      const error = (e.target as HTMLAudioElement).error
+      const errorMessage = error?.message || "Unknown error"
+      console.error("Audio loading error:", errorMessage)
+      setAudioError(errorMessage)
+
+      // If we've tried less than 3 times, try again with a delay
+      if (loadAttempts < 3 && currentAudioSrc.includes("/media/")) {
+        console.log(`Retry attempt ${loadAttempts + 1} for loading audio...`)
+        setLoadAttempts((prev) => prev + 1)
+
+        // Try again after a delay
+        setTimeout(
+          () => {
+            // Force reload by setting a dummy parameter
+            const retrySrc = `${currentAudioSrc}?retry=${Date.now()}`
+            console.log("Retrying with URL:", retrySrc)
+            audio.src = retrySrc
+            audio.load()
+          },
+          2000 * (loadAttempts + 1),
+        ) // Increasing delay for each retry
+      }
+      // If we've tried 3 times or it's not a media URL, fall back to default
+      else if (currentAudioSrc !== audioSrc) {
+        console.log("Falling back to default audio after failed attempts")
+        setCurrentAudioSrc(audioSrc)
+        localStorage.removeItem("boldthings-custom-audio") // Clear the custom audio setting
+        setLoadAttempts(0) // Reset load attempts for the default audio
+      }
     }
 
     const handleTimeUpdate = () => {
@@ -97,7 +174,7 @@ export function AudioPlayer({ audioSrc, className }: AudioPlayerProps) {
     audio.addEventListener("loadedmetadata", handleLoadedMetadata)
     audio.addEventListener("canplaythrough", handleCanPlayThrough)
     audio.addEventListener("timeupdate", handleTimeUpdate)
-    audio.addEventListener("error", handleError as EventListener)
+    audio.addEventListener("error", handleError)
 
     // Start loading the audio
     audio.load()
@@ -106,24 +183,25 @@ export function AudioPlayer({ audioSrc, className }: AudioPlayerProps) {
       audio.removeEventListener("loadedmetadata", handleLoadedMetadata)
       audio.removeEventListener("canplaythrough", handleCanPlayThrough)
       audio.removeEventListener("timeupdate", handleTimeUpdate)
-      audio.removeEventListener("error", handleError as EventListener)
+      audio.removeEventListener("error", handleError)
     }
-  }, [audioSrc, isMobile])
+  }, [currentAudioSrc, isMobile, loadAttempts, audioSrc])
 
   // Handle play/pause
   useEffect(() => {
     const audio = audioRef.current
-    if (!audio) return
+    if (!audio || audioError) return
 
     if (isPlaying) {
       audio.play().catch((error) => {
         console.error("Error playing audio:", error)
         setIsPlaying(false)
+        setAudioError(error.message || "Failed to play audio")
       })
     } else {
       audio.pause()
     }
-  }, [isPlaying])
+  }, [isPlaying, audioError])
 
   // Handle volume change
   useEffect(() => {
@@ -163,7 +241,18 @@ export function AudioPlayer({ audioSrc, className }: AudioPlayerProps) {
   // Generate waveform data from audio file
   const generateWaveformData = async () => {
     try {
-      const response = await fetch(audioSrc)
+      // If there's an error or we're using the default audio, use a fallback waveform
+      if (audioError || currentAudioSrc === audioSrc) {
+        console.log("Using fallback waveform data")
+        const fallbackData = Array(80)
+          .fill(0)
+          .map(() => Math.random() * 0.5 + 0.1)
+        setWaveformData(fallbackData)
+        setIsWaveformLoaded(true)
+        return
+      }
+
+      const response = await fetch(currentAudioSrc)
       if (!response.ok) {
         throw new Error(`Failed to fetch audio: ${response.status}`)
       }
@@ -200,7 +289,6 @@ export function AudioPlayer({ audioSrc, className }: AudioPlayerProps) {
     } catch (error) {
       console.error("Error generating waveform:", error)
       // If we can't load the waveform, create a simple placeholder
-      // This only happens if there's an error, not as a default
       const fallbackData = Array(80)
         .fill(0)
         .map(() => Math.random() * 0.5 + 0.1)
@@ -241,6 +329,8 @@ export function AudioPlayer({ audioSrc, className }: AudioPlayerProps) {
 
   // Handle click on waveform
   const handleWaveformClick = (e: React.MouseEvent<HTMLDivElement>) => {
+    if (audioError) return // Don't allow seeking if there's an error
+
     const waveform = waveformRef.current
     if (!waveform || !audioRef.current) return
 
@@ -260,6 +350,8 @@ export function AudioPlayer({ audioSrc, className }: AudioPlayerProps) {
 
   // Handle progress bar click (for mobile)
   const handleProgressBarClick = (e: React.MouseEvent<HTMLDivElement>) => {
+    if (audioError) return // Don't allow seeking if there's an error
+
     const progressBar = e.currentTarget
     if (!progressBar || !audioRef.current) return
 
@@ -334,6 +426,7 @@ export function AudioPlayer({ audioSrc, className }: AudioPlayerProps) {
 
   // Toggle play/pause
   const togglePlayPause = () => {
+    if (audioError) return // Don't allow play if there's an error
     setIsPlaying(!isPlaying)
   }
 
@@ -376,6 +469,21 @@ export function AudioPlayer({ audioSrc, className }: AudioPlayerProps) {
     }
   }, [isVolumeVisible])
 
+  // Get track name from URL
+  const getTrackName = () => {
+    // If there's an error, show error state
+    if (audioError) {
+      return "Audio Error"
+    }
+
+    // If it's a custom uploaded track from Blossom
+    if (currentAudioSrc.includes("/media/") || currentAudioSrc.includes("nostr.build")) {
+      return "Custom Track"
+    }
+    // Default track name
+    return "F4LC0N"
+  }
+
   return (
     <div
       className={cn(
@@ -393,17 +501,28 @@ export function AudioPlayer({ audioSrc, className }: AudioPlayerProps) {
               onClick={togglePlayPause}
               className={cn(
                 "flex items-center justify-center w-6 h-6 rounded-full transition-all duration-500",
-                isPlaying
-                  ? "bg-retro-teal/20 text-retro-teal shadow-[0_0_8px_rgba(94,191,181,0.4)]"
-                  : "bg-black/40 text-retro-display/60 hover:bg-black/60 hover:text-retro-display/80",
+                audioError
+                  ? "bg-red-500/20 text-red-400 cursor-not-allowed"
+                  : isPlaying
+                    ? "bg-retro-teal/20 text-retro-teal shadow-[0_0_8px_rgba(94,191,181,0.4)]"
+                    : "bg-black/40 text-retro-display/60 hover:bg-black/60 hover:text-retro-display/80",
               )}
               aria-label={isPlaying ? "Pause" : "Play"}
+              disabled={!!audioError}
             >
-              <Play className="h-3 w-3 ml-0.5" />
+              {audioError ? (
+                <AlertCircle className="h-3 w-3" />
+              ) : isPlaying ? (
+                <Pause className="h-3 w-3" />
+              ) : (
+                <Play className="h-3 w-3 ml-0.5" />
+              )}
             </button>
 
             <div className="ml-3">
-              <div className="text-xs font-medium text-retro-display truncate">F4LC0N</div>
+              <div className={cn("text-xs font-medium truncate", audioError ? "text-red-400" : "text-retro-display")}>
+                {getTrackName()}
+              </div>
             </div>
           </div>
 
@@ -412,17 +531,27 @@ export function AudioPlayer({ audioSrc, className }: AudioPlayerProps) {
             {isMobile ? (
               /* Simple progress bar for mobile */
               <div
-                className="relative w-full h-1 bg-retro-display/20 rounded-full cursor-pointer"
-                onClick={handleProgressBarClick}
+                className={cn(
+                  "relative w-full h-1 bg-retro-display/20 rounded-full",
+                  audioError ? "opacity-50 cursor-not-allowed" : "cursor-pointer",
+                )}
+                onClick={audioError ? undefined : handleProgressBarClick}
               >
                 <div
-                  className="absolute top-0 left-0 h-full bg-retro-display/60 rounded-full"
+                  className={cn(
+                    "absolute top-0 left-0 h-full rounded-full",
+                    audioError ? "bg-red-400/60" : "bg-retro-display/60",
+                  )}
                   style={{ width: `${playbackProgress}%` }}
                 ></div>
               </div>
             ) : (
               /* Waveform for desktop */
-              <div ref={waveformRef} className="relative w-full h-6 cursor-pointer" onClick={handleWaveformClick}>
+              <div
+                ref={waveformRef}
+                className={cn("relative w-full h-6", audioError ? "opacity-50 cursor-not-allowed" : "cursor-pointer")}
+                onClick={audioError ? undefined : handleWaveformClick}
+              >
                 {/* Waveform bars container - Only render when data is loaded */}
                 <div
                   className={cn(
@@ -443,11 +572,17 @@ export function AudioPlayer({ audioSrc, className }: AudioPlayerProps) {
                         <div
                           className={cn(
                             "w-full transition-all duration-300",
-                            isPlayed ? "bg-retro-display/80" : "bg-retro-display/30",
+                            audioError
+                              ? isPlayed
+                                ? "bg-red-400/80"
+                                : "bg-red-400/30"
+                              : isPlayed
+                                ? "bg-retro-display/80"
+                                : "bg-retro-display/30",
                           )}
                           style={{
                             height: `${height}px`,
-                            boxShadow: isPlayed ? "0 0 4px rgba(232, 227, 199, 0.7)" : "none",
+                            boxShadow: isPlayed && !audioError ? "0 0 4px rgba(232, 227, 199, 0.7)" : "none",
                           }}
                         />
                       </div>
@@ -456,7 +591,7 @@ export function AudioPlayer({ audioSrc, className }: AudioPlayerProps) {
                 </div>
 
                 {/* Playhead - Only shown when waveform is loaded */}
-                {isWaveformLoaded && playbackProgress > 0 && (
+                {isWaveformLoaded && playbackProgress > 0 && !audioError && (
                   <div
                     className="absolute top-0 bottom-0 w-[2px] bg-retro-teal/40 z-10 transition-all duration-300"
                     style={{
@@ -493,6 +628,7 @@ export function AudioPlayer({ audioSrc, className }: AudioPlayerProps) {
                     : "bg-transparent text-retro-display/60 hover:text-retro-display/80",
                 )}
                 aria-label={isLooping ? "Disable loop" : "Enable loop"}
+                disabled={!!audioError}
               >
                 <Repeat className="h-3 w-3" />
               </button>
@@ -582,7 +718,7 @@ export function AudioPlayer({ audioSrc, className }: AudioPlayerProps) {
         </div>
       </div>
 
-      <audio ref={audioRef} src={audioSrc} preload="auto" crossOrigin="anonymous" />
+      <audio ref={audioRef} src={currentAudioSrc} preload="auto" crossOrigin="anonymous" />
     </div>
   )
 }

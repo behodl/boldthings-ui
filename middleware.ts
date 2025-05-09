@@ -14,6 +14,7 @@ export function middleware(request: NextRequest) {
     !path.startsWith("/api") &&
     !path.startsWith("/signature") &&
     !path.startsWith("/alt") &&
+    !path.startsWith("/upload") &&
     !path.includes(".")
   ) {
     // Create a URL for the destination
