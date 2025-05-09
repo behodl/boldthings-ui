@@ -989,27 +989,20 @@ input[type="range"]::-moz-range-thumb:hover {
   background: #e8e3c7;
 }
 
-/* Update the audio player animation to have a longer duration and a smoother entrance */
-
 /* Audio player container animation */
 @keyframes fadeInAudioPlayer {
-  0% {
+  from {
     opacity: 0;
     transform: translateY(10px);
   }
-  20% {
-    opacity: 0;
-    transform: translateY(10px);
-  }
-  100% {
+  to {
     opacity: 1;
     transform: translateY(0);
   }
 }
 
 .audio-player-enter {
-  animation: fadeInAudioPlayer 1.5s ease forwards;
-  animation-delay: 2s; /* Add a delay to the animation start */
+  animation: fadeInAudioPlayer 0.5s ease forwards;
 }
 
 /* Waveform glow effect */
@@ -1025,41 +1018,4 @@ input[type="range"]::-moz-range-thumb:hover {
 
 .waveform-glow {
   animation: waveform-glow 5s ease-in-out infinite;
-}
-
-/* Add this new CSS class for text glitching in the audio player */
-.glitch-text {
-  position: relative;
-  display: inline-block;
-}
-
-.glitch-text.glitching {
-  animation: text-glitch 0.2s ease-in-out;
-}
-
-@keyframes text-glitch {
-  0% {
-    transform: translateX(0);
-    opacity: 1;
-  }
-  20% {
-    transform: translateX(-2px);
-    opacity: 0.8;
-  }
-  40% {
-    transform: translateX(2px);
-    opacity: 0.9;
-  }
-  60% {
-    transform: translateX(-1px);
-    opacity: 0.8;
-  }
-  80% {
-    transform: translateX(1px);
-    opacity: 0.9;
-  }
-  100% {
-    transform: translateX(0);
-    opacity: 1;
-  }
 }

@@ -34,12 +34,11 @@ export function AudioPlayer({ audioSrc = "https://media.boldthin.gs/F4LC0N.mp3",
 
   // Visual effects state
   const [flickerState, setFlickerState] = useState(false)
-  const [isTextGlitching, setIsTextGlitching] = useState(false)
 
   // Refs
   const audioRef = useRef<HTMLAudioElement | null>(null)
-  const waveformRef = useRef<HTMLDivElement | null>(null)
-  const volumeTrackRef = useRef<HTMLDivElement | null>(null)
+  const waveformRef = useRef<HTMLDivElement>(null)
+  const volumeTrackRef = useRef<HTMLDivElement>(null)
   const flickerTimerRef = useRef<NodeJS.Timeout | null>(null)
   const mountedRef = useRef(false)
 
@@ -50,12 +49,12 @@ export function AudioPlayer({ audioSrc = "https://media.boldthin.gs/F4LC0N.mp3",
     // Set up flicker effect
     setupFlickerEffect()
 
-    // Fade in the player after a longer delay (after logo animation completes)
+    // Fade in the player after a short delay
     const fadeInTimer = setTimeout(() => {
       if (mountedRef.current) {
         setIsVisible(true)
       }
-    }, 2500) // Increased from 500ms to 2500ms to appear after logo animation
+    }, 500)
 
     return () => {
       mountedRef.current = false
@@ -283,12 +282,14 @@ export function AudioPlayer({ audioSrc = "https://media.boldthin.gs/F4LC0N.mp3",
   }
 
   // Handle volume fader interaction
-  const handleVolumeTrackClick = (e: React.MouseEvent<HTMLDivElement>) => {
+  const handleVolumeTrackClick = (e: React.MouseEvent<HTMLDivElement> | React.TouchEvent<HTMLDivElement>) => {
     const track = volumeTrackRef.current
     if (!track) return
 
+    // Get position whether it's a mouse or touch event
     const rect = track.getBoundingClientRect()
-    const clickY = e.clientY - rect.top
+    const clientY = "touches" in e ? e.touches[0].clientY : e.clientY
+    const clickY = clientY - rect.top
     const trackHeight = rect.height
 
     // Calculate volume (0 at bottom, 1 at top)
@@ -297,7 +298,7 @@ export function AudioPlayer({ audioSrc = "https://media.boldthin.gs/F4LC0N.mp3",
   }
 
   // Handle volume fader drag start
-  const handleVolumeDragStart = (e: React.MouseEvent<HTMLDivElement>) => {
+  const handleVolumeDragStart = (e: React.MouseEvent<HTMLDivElement> | React.TouchEvent<HTMLDivElement>) => {
     setIsDraggingVolume(true)
 
     // Prevent text selection during drag
@@ -308,12 +309,13 @@ export function AudioPlayer({ audioSrc = "https://media.boldthin.gs/F4LC0N.mp3",
   useEffect(() => {
     if (!isDraggingVolume) return
 
-    const handleMouseMove = (e: MouseEvent) => {
+    const handleMouseMove = (e: MouseEvent | TouchEvent) => {
       const track = volumeTrackRef.current
       if (!track) return
 
       const rect = track.getBoundingClientRect()
-      const mouseY = e.clientY - rect.top
+      const clientY = "touches" in e ? (e as TouchEvent).touches[0].clientY : (e as MouseEvent).clientY
+      const mouseY = clientY - rect.top
       const trackHeight = rect.height
 
       // Calculate volume (0 at bottom, 1 at top)
@@ -325,12 +327,17 @@ export function AudioPlayer({ audioSrc = "https://media.boldthin.gs/F4LC0N.mp3",
       setIsDraggingVolume(false)
     }
 
+    // Add both mouse and touch event listeners
     document.addEventListener("mousemove", handleMouseMove)
     document.addEventListener("mouseup", handleMouseUp)
+    document.addEventListener("touchmove", handleMouseMove, { passive: false })
+    document.addEventListener("touchend", handleMouseUp)
 
     return () => {
       document.removeEventListener("mousemove", handleMouseMove)
       document.removeEventListener("mouseup", handleMouseUp)
+      document.removeEventListener("touchmove", handleMouseMove)
+      document.removeEventListener("touchend", handleMouseUp)
     }
   }, [isDraggingVolume])
 
@@ -381,37 +388,6 @@ export function AudioPlayer({ audioSrc = "https://media.boldthin.gs/F4LC0N.mp3",
     }
   }, [isVolumeVisible])
 
-  // Set up text glitch effect
-  useEffect(() => {
-    if (!mountedRef.current) return
-
-    const triggerTextGlitch = () => {
-      if (Math.random() < 0.1) {
-        // 10% chance of glitching
-        setIsTextGlitching(true)
-
-        // Glitch duration between 100ms and 300ms
-        const glitchDuration = 100 + Math.random() * 200
-        setTimeout(() => {
-          if (mountedRef.current) {
-            setIsTextGlitching(false)
-          }
-        }, glitchDuration)
-      }
-
-      // Schedule next potential glitch (between 5-15 seconds)
-      const nextGlitchDelay = 5000 + Math.random() * 10000
-      setTimeout(triggerTextGlitch, nextGlitchDelay)
-    }
-
-    // Start the glitch cycle after a delay
-    const initialDelay = setTimeout(triggerTextGlitch, 5000)
-
-    return () => {
-      clearTimeout(initialDelay)
-    }
-  }, [])
-
   return (
     <div
       className={cn(
@@ -440,11 +416,7 @@ export function AudioPlayer({ audioSrc = "https://media.boldthin.gs/F4LC0N.mp3",
             </button>
 
             <div className="ml-3 flex items-center">
-              <div
-                className={`font-space-mono text-xs font-medium text-retro-display truncate glitch-text ${isTextGlitching ? "glitching" : ""}`}
-              >
-                F4LC0N
-              </div>
+              <div className="text-xs font-medium text-retro-display truncate">F4LC0N</div>
             </div>
           </div>
 
@@ -513,9 +485,7 @@ export function AudioPlayer({ audioSrc = "https://media.boldthin.gs/F4LC0N.mp3",
           {/* Right: Time and controls - Simplified on mobile */}
           <div className={cn("flex items-center justify-end", isMobile ? "w-1/3 space-x-2" : "w-1/4 space-x-3")}>
             {/* Time display - Always visible */}
-            <div
-              className={`font-space-mono text-[10px] text-retro-display/80 glitch-text ${isTextGlitching ? "glitching" : ""}`}
-            >
+            <div className="font-space-mono text-[10px] text-retro-display/80">
               <span>{formatTime(currentTime)}</span>
               {!isMobile && (
                 <>
@@ -568,25 +538,22 @@ export function AudioPlayer({ audioSrc = "https://media.boldthin.gs/F4LC0N.mp3",
                 )}
                 style={{
                   boxShadow: "0 0 15px rgba(0, 0, 0, 0.3), 0 0 5px rgba(94, 191, 181, 0.2)",
-                  width: "32px", // Increased width for more padding
-                  padding: "12px", // Even padding on all sides
+                  width: "40px", // Increased width for more padding and touch area
+                  padding: "14px", // Even padding on all sides
                 }}
               >
                 <div className="flex flex-col items-center justify-between h-[120px]">
                   {/* Volume value display */}
-                  <div
-                    className={`font-space-mono text-[10px] text-retro-display/70 glitch-text ${isTextGlitching ? "glitching" : ""}`}
-                  >
-                    {Math.round(volume * 100)}%
-                  </div>
+                  <div className="font-space-mono text-[10px] text-retro-display/70">{Math.round(volume * 100)}%</div>
 
                   {/* Minimal fader */}
-                  <div className="relative" style={{ width: "4px", height: "80px" }}>
+                  <div className="relative" style={{ width: "8px", height: "80px" }}>
                     {/* Fader track (just a thin line) */}
                     <div
                       ref={volumeTrackRef}
-                      className="absolute inset-0 w-[2px] mx-auto bg-retro-display/30 rounded-full cursor-pointer"
+                      className="absolute inset-0 w-[4px] mx-auto bg-retro-display/30 rounded-full cursor-pointer"
                       onClick={handleVolumeTrackClick}
+                      onTouchStart={handleVolumeTrackClick}
                     >
                       {/* Filled portion - Reduced opacity */}
                       <div
@@ -598,15 +565,16 @@ export function AudioPlayer({ audioSrc = "https://media.boldthin.gs/F4LC0N.mp3",
                     {/* Minimal fader handle */}
                     <div
                       className={cn(
-                        "absolute left-[-4px] right-[-4px] h-3 w-3 bg-retro-display/80 rounded-full cursor-grab",
+                        "absolute left-[-6px] right-[-6px] h-5 w-5 bg-retro-display/80 rounded-full cursor-grab",
                         "shadow-sm transition-all duration-100",
                         isDraggingVolume ? "cursor-grabbing" : "",
                       )}
                       style={{
-                        bottom: `calc(${volume * 100}% - 6px)`,
+                        bottom: `calc(${volume * 100}% - 10px)`,
                         boxShadow: "0 0 4px rgba(232, 227, 199, 0.3)",
                       }}
                       onMouseDown={handleVolumeDragStart}
+                      onTouchStart={handleVolumeDragStart}
                     ></div>
                   </div>
 
