@@ -3,7 +3,7 @@
 import type React from "react"
 
 import { useEffect, useRef, useState } from "react"
-import { Play, Pause, Volume2, VolumeX, Repeat, AlertCircle } from "lucide-react"
+import { Play, Pause, Volume2, VolumeX, Repeat, AlertTriangle, RotateCw } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { useIsMobile } from "@/hooks/use-mobile"
 
@@ -12,10 +12,7 @@ interface AudioPlayerProps {
   className?: string
 }
 
-export function AudioPlayer({
-  audioSrc = "https://audio.nostr.build/1b6fdfffa97558d65f2129e891077574f9bfe0ea63d3dced485b99a8135d663d.mp3",
-  className,
-}: AudioPlayerProps) {
+export function AudioPlayer({ audioSrc = "https://media.boldthin.gs/F4LC0N.mp3", className }: AudioPlayerProps) {
   // Responsive state
   const isMobile = useIsMobile()
 
@@ -28,9 +25,9 @@ export function AudioPlayer({
   const [isLooping, setIsLooping] = useState(false)
   const [isLoaded, setIsLoaded] = useState(false)
   const [isVisible, setIsVisible] = useState(false)
-  const [currentAudioSrc, setCurrentAudioSrc] = useState(audioSrc)
   const [audioError, setAudioError] = useState<string | null>(null)
-  const [loadAttempts, setLoadAttempts] = useState(0)
+  const [usingFallback, setUsingFallback] = useState(false)
+  const [isRetrying, setIsRetrying] = useState(false)
 
   // UI state
   const [isVolumeVisible, setIsVolumeVisible] = useState(false)
@@ -42,174 +39,391 @@ export function AudioPlayer({
   const [flickerState, setFlickerState] = useState(false)
 
   // Refs
-  const audioRef = useRef<HTMLAudioElement>(null)
+  const audioRef = useRef<HTMLAudioElement | null>(null)
   const waveformRef = useRef<HTMLDivElement>(null)
   const volumeTrackRef = useRef<HTMLDivElement>(null)
   const flickerTimerRef = useRef<NodeJS.Timeout | null>(null)
-
-  // Check for custom audio URL in localStorage on mount
-  useEffect(() => {
-    const customAudio = localStorage.getItem("boldthings-custom-audio")
-    if (customAudio) {
-      console.log("Loading custom audio from localStorage:", customAudio)
-      setCurrentAudioSrc(customAudio)
-    }
-  }, [])
-
-  // Listen for custom audio update events
-  useEffect(() => {
-    const handleAudioUpdate = (event: CustomEvent) => {
-      const { url } = event.detail
-      console.log("Received audio update event with URL:", url)
-      setCurrentAudioSrc(url)
-      setAudioError(null) // Reset any previous errors
-      setLoadAttempts(0) // Reset load attempts
-
-      // Reset player state
-      setCurrentTime(0)
-      setIsPlaying(false)
-      setIsWaveformLoaded(false)
-
-      // Generate new waveform after a short delay
-      setTimeout(() => {
-        if (!isMobile) {
-          generateWaveformData()
-        }
-      }, 500)
-    }
-
-    // Add event listener
-    window.addEventListener("boldthings-audio-update", handleAudioUpdate as EventListener)
-
-    // Clean up
-    return () => {
-      window.removeEventListener("boldthings-audio-update", handleAudioUpdate as EventListener)
-    }
-  }, [isMobile])
+  const audioContextRef = useRef<AudioContext | null>(null)
+  const oscillatorRef = useRef<OscillatorNode | null>(null)
+  const gainNodeRef = useRef<GainNode | null>(null)
+  const mountedRef = useRef(false)
 
   // Set up flicker effect on mount
   useEffect(() => {
+    mountedRef.current = true
+
     // Set up flicker effect
     setupFlickerEffect()
 
     // Fade in the player after a short delay
     const fadeInTimer = setTimeout(() => {
-      setIsVisible(true)
+      if (mountedRef.current) {
+        setIsVisible(true)
+      }
     }, 500)
 
     return () => {
+      mountedRef.current = false
+
       if (flickerTimerRef.current) {
         clearTimeout(flickerTimerRef.current)
       }
       clearTimeout(fadeInTimer)
+
+      // Clean up audio context if it exists
+      if (audioContextRef.current) {
+        if (oscillatorRef.current) {
+          oscillatorRef.current.stop()
+        }
+        audioContextRef.current.close().catch(console.error)
+      }
     }
   }, [])
 
-  // Load audio and get metadata
+  // Generate a placeholder waveform without fetching the audio file
+  const generatePlaceholderWaveform = () => {
+    // Create a visually interesting pattern that resembles audio
+    const dataPoints: number[] = []
+    const samples = 80
+
+    // Create a more interesting pattern with some randomness but also structure
+    for (let i = 0; i < samples; i++) {
+      // Base amplitude varies with position (creates a shape)
+      const position = i / samples
+      const baseAmplitude = 0.3 + 0.4 * Math.sin(position * Math.PI * 2) // Sine wave pattern
+
+      // Add some randomness
+      const randomFactor = 0.3
+      const randomValue = Math.random() * randomFactor
+
+      // Combine base pattern with randomness
+      const value = baseAmplitude + randomValue
+
+      // Ensure value is between 0 and 1
+      dataPoints.push(Math.min(1, Math.max(0, value)))
+    }
+
+    setWaveformData(dataPoints)
+
+    // Set waveform as loaded with a slight delay to ensure smooth transition
+    setTimeout(() => {
+      if (mountedRef.current) {
+        setIsWaveformLoaded(true)
+      }
+    }, 100)
+  }
+
+  // Set up tone generator as fallback
+  const setupToneGenerator = () => {
+    try {
+      console.log("Setting up tone generator as fallback")
+
+      // Create audio context if it doesn't exist
+      if (!audioContextRef.current) {
+        audioContextRef.current = new (window.AudioContext || (window as any).webkitAudioContext)()
+      }
+
+      const ctx = audioContextRef.current
+
+      // Create oscillator and gain node
+      const oscillator = ctx.createOscillator()
+      const gainNode = ctx.createGain()
+
+      // Configure oscillator
+      oscillator.type = "sine"
+      oscillator.frequency.setValueAtTime(440, ctx.currentTime) // A4 note
+
+      // Configure gain (volume)
+      gainNode.gain.setValueAtTime(0, ctx.currentTime) // Start silent
+
+      // Connect nodes
+      oscillator.connect(gainNode)
+      gainNode.connect(ctx.destination)
+
+      // Start oscillator
+      oscillator.start()
+
+      // Store references
+      oscillatorRef.current = oscillator
+      gainNodeRef.current = gainNode
+
+      // Set as loaded
+      if (mountedRef.current) {
+        setIsLoaded(true)
+        setDuration(180) // Default to 3 minutes for tone generator
+        setUsingFallback(true)
+        setAudioError("Using tone generator (audio format not supported)")
+      }
+
+      console.log("Tone generator ready")
+    } catch (error) {
+      console.error("Failed to set up tone generator:", error)
+      if (mountedRef.current) {
+        setAudioError("All audio playback methods failed")
+      }
+    }
+  }
+
+  // Play/pause the tone generator
+  const controlToneGenerator = (play: boolean) => {
+    if (!audioContextRef.current || !gainNodeRef.current) return
+
+    const ctx = audioContextRef.current
+    const gainNode = gainNodeRef.current
+
+    if (play) {
+      // Fade in
+      gainNode.gain.cancelScheduledValues(ctx.currentTime)
+      gainNode.gain.setValueAtTime(gainNode.gain.value, ctx.currentTime)
+      gainNode.gain.linearRampToValueAtTime(volume, ctx.currentTime + 0.1)
+    } else {
+      // Fade out
+      gainNode.gain.cancelScheduledValues(ctx.currentTime)
+      gainNode.gain.setValueAtTime(gainNode.gain.value, ctx.currentTime)
+      gainNode.gain.linearRampToValueAtTime(0, ctx.currentTime + 0.1)
+    }
+  }
+
+  // Initialize audio player
   useEffect(() => {
-    const audio = audioRef.current
-    if (!audio) return
+    // Generate placeholder waveform immediately
+    generatePlaceholderWaveform()
 
-    console.log("Attempting to load audio from:", currentAudioSrc)
-    setAudioError(null) // Reset error state when trying to load new audio
-    setIsLoaded(false)
+    // Create a new audio element
+    const audio = new Audio()
+    audio.crossOrigin = "anonymous"
+    audio.preload = "auto"
 
-    const handleLoadedMetadata = () => {
-      console.log("Audio metadata loaded successfully")
-      if (audio.duration && !isNaN(audio.duration) && audio.duration !== Number.POSITIVE_INFINITY) {
-        setDuration(audio.duration)
-      }
-      setIsLoaded(true)
-      setAudioError(null) // Clear any previous errors
+    // Store reference
+    audioRef.current = audio
 
-      // Only generate waveform on non-mobile devices
-      if (!isMobile) {
-        generateWaveformData()
-      }
-    }
-
-    const handleCanPlayThrough = () => {
-      console.log("Audio can play through")
-      if (audio.duration && !isNaN(audio.duration) && audio.duration !== Number.POSITIVE_INFINITY) {
-        setDuration(audio.duration)
-      }
-    }
-
-    const handleError = (e: Event) => {
-      const error = (e.target as HTMLAudioElement).error
-      const errorMessage = error?.message || "Unknown error"
-      console.error("Audio loading error:", errorMessage)
-      setAudioError(errorMessage)
-
-      // If we've tried less than 3 times, try again with a delay
-      if (loadAttempts < 3 && currentAudioSrc.includes("/media/")) {
-        console.log(`Retry attempt ${loadAttempts + 1} for loading audio...`)
-        setLoadAttempts((prev) => prev + 1)
-
-        // Try again after a delay
-        setTimeout(
-          () => {
-            // Force reload by setting a dummy parameter
-            const retrySrc = `${currentAudioSrc}?retry=${Date.now()}`
-            console.log("Retrying with URL:", retrySrc)
-            audio.src = retrySrc
-            audio.load()
-          },
-          2000 * (loadAttempts + 1),
-        ) // Increasing delay for each retry
-      }
-      // If we've tried 3 times or it's not a media URL, fall back to default
-      else if (currentAudioSrc !== audioSrc) {
-        console.log("Falling back to default audio after failed attempts")
-        setCurrentAudioSrc(audioSrc)
-        localStorage.removeItem("boldthings-custom-audio") // Clear the custom audio setting
-        setLoadAttempts(0) // Reset load attempts for the default audio
-      }
-    }
-
-    const handleTimeUpdate = () => {
-      setCurrentTime(audio.currentTime)
-    }
-
+    // Set up event listeners
     audio.addEventListener("loadedmetadata", handleLoadedMetadata)
     audio.addEventListener("canplaythrough", handleCanPlayThrough)
     audio.addEventListener("timeupdate", handleTimeUpdate)
     audio.addEventListener("error", handleError)
+    audio.addEventListener("ended", handleEnded)
 
-    // Start loading the audio
-    audio.load()
+    // Try to load the audio
+    loadAudio()
 
+    // Clean up
     return () => {
+      audio.pause()
       audio.removeEventListener("loadedmetadata", handleLoadedMetadata)
       audio.removeEventListener("canplaythrough", handleCanPlayThrough)
       audio.removeEventListener("timeupdate", handleTimeUpdate)
       audio.removeEventListener("error", handleError)
+      audio.removeEventListener("ended", handleEnded)
     }
-  }, [currentAudioSrc, isMobile, loadAttempts, audioSrc])
+  }, [audioSrc])
+
+  // Load audio with fallback
+  const loadAudio = () => {
+    if (!audioRef.current || !mountedRef.current) return
+
+    console.log("Attempting to load audio from:", audioSrc)
+    setAudioError(null)
+    setUsingFallback(false)
+    setIsLoaded(false)
+    setIsRetrying(false)
+
+    try {
+      // Set source and load
+      audioRef.current.src = audioSrc
+      audioRef.current.load()
+
+      // Set up a timeout to switch to tone generator if loading takes too long
+      const timeoutId = setTimeout(() => {
+        if (!isLoaded && mountedRef.current) {
+          console.log("Audio loading timed out, using tone generator")
+          setupToneGenerator()
+        }
+      }, 5000) // 5 second timeout
+
+      return () => clearTimeout(timeoutId)
+    } catch (e) {
+      console.error("Error during audio loading:", e)
+      setupToneGenerator()
+    }
+  }
+
+  // Retry loading audio
+  const retryAudio = () => {
+    if (!mountedRef.current) return
+
+    setIsRetrying(true)
+
+    // Clean up existing audio context if using fallback
+    if (usingFallback && audioContextRef.current) {
+      if (oscillatorRef.current) {
+        oscillatorRef.current.stop()
+      }
+      audioContextRef.current.close().catch(console.error)
+      audioContextRef.current = null
+      oscillatorRef.current = null
+      gainNodeRef.current = null
+    }
+
+    // Reset state
+    setIsPlaying(false)
+    setCurrentTime(0)
+    setAudioError(null)
+    setUsingFallback(false)
+    setIsLoaded(false)
+
+    // Try loading with cache-busting parameter
+    if (audioRef.current) {
+      const cacheBuster = Date.now()
+      const url = audioSrc.includes("?") ? `${audioSrc}&cb=${cacheBuster}` : `${audioSrc}?cb=${cacheBuster}`
+
+      console.log("Retrying audio load with:", url)
+      audioRef.current.src = url
+      audioRef.current.load()
+
+      // Set timeout to fall back to tone generator
+      setTimeout(() => {
+        if (!isLoaded && mountedRef.current) {
+          console.log("Retry timed out, using tone generator")
+          setupToneGenerator()
+        }
+        if (mountedRef.current) {
+          setIsRetrying(false)
+        }
+      }, 5000)
+    } else {
+      setIsRetrying(false)
+      setupToneGenerator()
+    }
+  }
+
+  // Event handlers
+  const handleLoadedMetadata = () => {
+    if (!audioRef.current || !mountedRef.current) return
+
+    console.log("Audio metadata loaded successfully")
+    if (
+      audioRef.current.duration &&
+      !isNaN(audioRef.current.duration) &&
+      audioRef.current.duration !== Number.POSITIVE_INFINITY
+    ) {
+      setDuration(audioRef.current.duration)
+    }
+    setIsLoaded(true)
+    setAudioError(null)
+  }
+
+  const handleCanPlayThrough = () => {
+    if (!audioRef.current || !mountedRef.current) return
+
+    console.log("Audio can play through")
+    if (
+      audioRef.current.duration &&
+      !isNaN(audioRef.current.duration) &&
+      audioRef.current.duration !== Number.POSITIVE_INFINITY
+    ) {
+      setDuration(audioRef.current.duration)
+    }
+  }
+
+  const handleError = (e: Event) => {
+    if (!mountedRef.current) return
+
+    const audio = e.target as HTMLAudioElement
+    let errorMessage = "Unknown audio error"
+
+    if (audio.error) {
+      const errorCode = audio.error.code
+      switch (errorCode) {
+        case 1:
+          errorMessage = "Audio loading aborted"
+          break
+        case 2:
+          errorMessage = "Network error while loading audio"
+          break
+        case 3:
+          errorMessage = "Audio format not supported"
+          break
+        case 4:
+          errorMessage = "Audio not supported"
+          break
+      }
+    }
+
+    console.error("Audio loading error:", e, audio.error)
+    setAudioError(errorMessage)
+
+    // For any error, use tone generator
+    setupToneGenerator()
+  }
+
+  const handleTimeUpdate = () => {
+    if (!audioRef.current || usingFallback || !mountedRef.current) return
+    setCurrentTime(audioRef.current.currentTime)
+  }
+
+  const handleEnded = () => {
+    if (usingFallback || !mountedRef.current) return
+
+    if (!isLooping) {
+      setIsPlaying(false)
+      setCurrentTime(0)
+      if (audioRef.current) {
+        audioRef.current.currentTime = 0
+      }
+    }
+  }
 
   // Handle play/pause
   useEffect(() => {
+    // If using tone generator, control it directly
+    if (usingFallback) {
+      controlToneGenerator(isPlaying)
+      return
+    }
+
     const audio = audioRef.current
-    if (!audio || audioError) return
+    if (!audio) return
 
     if (isPlaying) {
-      audio.play().catch((error) => {
-        console.error("Error playing audio:", error)
-        setIsPlaying(false)
-        setAudioError(error.message || "Failed to play audio")
-      })
+      const playPromise = audio.play()
+      if (playPromise !== undefined) {
+        playPromise.catch((error) => {
+          console.error("Error playing audio:", error)
+          if (mountedRef.current) {
+            setIsPlaying(false)
+          }
+
+          // If autoplay is prevented, show a message
+          if (error.name === "NotAllowedError") {
+            if (mountedRef.current) {
+              setAudioError("Playback was prevented by the browser. Please click play again.")
+            }
+          } else {
+            // For other errors, use the tone generator
+            setupToneGenerator()
+          }
+        })
+      }
     } else {
       audio.pause()
     }
-  }, [isPlaying, audioError])
+  }, [isPlaying, usingFallback])
 
   // Handle volume change
   useEffect(() => {
+    // If using tone generator, update its volume
+    if (usingFallback && gainNodeRef.current && isPlaying) {
+      const actualVolume = isMuted ? 0 : volume
+      gainNodeRef.current.gain.setValueAtTime(actualVolume, audioContextRef.current?.currentTime || 0)
+      return
+    }
+
     const audio = audioRef.current
     if (!audio) return
 
     audio.volume = isMuted ? 0 : volume
-  }, [volume, isMuted])
+  }, [volume, isMuted, usingFallback, isPlaying])
 
   // Handle loop setting
   useEffect(() => {
@@ -219,93 +433,53 @@ export function AudioPlayer({
     audio.loop = isLooping
   }, [isLooping])
 
-  // Handle audio end
+  // Update time for tone generator
   useEffect(() => {
-    const audio = audioRef.current
-    if (!audio) return
+    if (!usingFallback || !isPlaying || !mountedRef.current) return
 
-    const handleEnded = () => {
-      if (!isLooping) {
+    let startTime = Date.now() - currentTime * 1000
+    let animationId: number
+
+    const updateTime = () => {
+      if (!mountedRef.current) return
+
+      const elapsed = (Date.now() - startTime) / 1000
+      setCurrentTime(elapsed)
+
+      if (elapsed >= duration && !isLooping) {
         setIsPlaying(false)
         setCurrentTime(0)
-      }
-    }
-
-    audio.addEventListener("ended", handleEnded)
-
-    return () => {
-      audio.removeEventListener("ended", handleEnded)
-    }
-  }, [isLooping])
-
-  // Generate waveform data from audio file
-  const generateWaveformData = async () => {
-    try {
-      // If there's an error or we're using the default audio, use a fallback waveform
-      if (audioError || currentAudioSrc === audioSrc) {
-        console.log("Using fallback waveform data")
-        const fallbackData = Array(80)
-          .fill(0)
-          .map(() => Math.random() * 0.5 + 0.1)
-        setWaveformData(fallbackData)
-        setIsWaveformLoaded(true)
         return
       }
 
-      const response = await fetch(currentAudioSrc)
-      if (!response.ok) {
-        throw new Error(`Failed to fetch audio: ${response.status}`)
+      if (elapsed >= duration && isLooping) {
+        startTime = Date.now()
+        setCurrentTime(0)
       }
 
-      const arrayBuffer = await response.arrayBuffer()
-      const audioContext = new (window.AudioContext || (window as any).webkitAudioContext)()
-      const audioBuffer = await audioContext.decodeAudioData(arrayBuffer)
-      const channelData = audioBuffer.getChannelData(0)
-
-      // Sample the audio data - more samples for thinner bars
-      const samples = 80
-      const blockSize = Math.floor(channelData.length / samples)
-      const dataPoints: number[] = []
-
-      for (let i = 0; i < samples; i++) {
-        const blockStart = blockSize * i
-        let sum = 0
-        for (let j = 0; j < blockSize; j++) {
-          sum += Math.abs(channelData[blockStart + j])
-        }
-        dataPoints.push(sum / blockSize)
-      }
-
-      // Normalize the data
-      const maxValue = Math.max(...dataPoints)
-      const normalizedData = dataPoints.map((point) => point / maxValue)
-
-      setWaveformData(normalizedData)
-
-      // Set waveform as loaded with a slight delay to ensure smooth transition
-      setTimeout(() => {
-        setIsWaveformLoaded(true)
-      }, 100)
-    } catch (error) {
-      console.error("Error generating waveform:", error)
-      // If we can't load the waveform, create a simple placeholder
-      const fallbackData = Array(80)
-        .fill(0)
-        .map(() => Math.random() * 0.5 + 0.1)
-      setWaveformData(fallbackData)
-      setIsWaveformLoaded(true)
+      animationId = requestAnimationFrame(updateTime)
     }
-  }
+
+    animationId = requestAnimationFrame(updateTime)
+
+    return () => {
+      cancelAnimationFrame(animationId)
+    }
+  }, [usingFallback, isPlaying, isLooping, duration, currentTime])
 
   // Set up flicker effect
   const setupFlickerEffect = () => {
     const triggerFlicker = () => {
+      if (!mountedRef.current) return
+
       if (Math.random() < 0.25) {
         setFlickerState(true)
 
         const flickerDuration = 50 + Math.random() * 150
         setTimeout(() => {
-          setFlickerState(false)
+          if (mountedRef.current) {
+            setFlickerState(false)
+          }
         }, flickerDuration)
       }
 
@@ -329,10 +503,18 @@ export function AudioPlayer({
 
   // Handle click on waveform
   const handleWaveformClick = (e: React.MouseEvent<HTMLDivElement>) => {
-    if (audioError) return // Don't allow seeking if there's an error
-
     const waveform = waveformRef.current
-    if (!waveform || !audioRef.current) return
+    if (!waveform) return
+
+    // If using tone generator, just toggle play state
+    if (usingFallback) {
+      if (!isPlaying) {
+        setIsPlaying(true)
+      }
+      return
+    }
+
+    if (!audioRef.current) return
 
     const rect = waveform.getBoundingClientRect()
     const clickPosition = (e.clientX - rect.left) / rect.width
@@ -350,9 +532,16 @@ export function AudioPlayer({
 
   // Handle progress bar click (for mobile)
   const handleProgressBarClick = (e: React.MouseEvent<HTMLDivElement>) => {
-    if (audioError) return // Don't allow seeking if there's an error
-
     const progressBar = e.currentTarget
+
+    // If using tone generator, just toggle play state
+    if (usingFallback) {
+      if (!isPlaying) {
+        setIsPlaying(true)
+      }
+      return
+    }
+
     if (!progressBar || !audioRef.current) return
 
     const rect = progressBar.getBoundingClientRect()
@@ -426,7 +615,6 @@ export function AudioPlayer({
 
   // Toggle play/pause
   const togglePlayPause = () => {
-    if (audioError) return // Don't allow play if there's an error
     setIsPlaying(!isPlaying)
   }
 
@@ -469,18 +657,9 @@ export function AudioPlayer({
     }
   }, [isVolumeVisible])
 
-  // Get track name from URL
-  const getTrackName = () => {
-    // If there's an error, show error state
-    if (audioError) {
-      return "Audio Error"
-    }
-
-    // If it's a custom uploaded track from Blossom
-    if (currentAudioSrc.includes("/media/") || currentAudioSrc.includes("nostr.build")) {
-      return "Custom Track"
-    }
-    // Default track name
+  // Get audio source display name
+  const getAudioSourceName = () => {
+    if (usingFallback) return "Tone Generator"
     return "F4LC0N"
   }
 
@@ -501,28 +680,39 @@ export function AudioPlayer({
               onClick={togglePlayPause}
               className={cn(
                 "flex items-center justify-center w-6 h-6 rounded-full transition-all duration-500",
-                audioError
-                  ? "bg-red-500/20 text-red-400 cursor-not-allowed"
-                  : isPlaying
-                    ? "bg-retro-teal/20 text-retro-teal shadow-[0_0_8px_rgba(94,191,181,0.4)]"
-                    : "bg-black/40 text-retro-display/60 hover:bg-black/60 hover:text-retro-display/80",
+                isPlaying
+                  ? "bg-retro-teal/20 text-retro-teal shadow-[0_0_8px_rgba(94,191,181,0.4)]"
+                  : "bg-black/40 text-retro-display/60 hover:bg-black/60 hover:text-retro-display/80",
               )}
               aria-label={isPlaying ? "Pause" : "Play"}
-              disabled={!!audioError}
+              disabled={isRetrying}
             >
-              {audioError ? (
-                <AlertCircle className="h-3 w-3" />
-              ) : isPlaying ? (
-                <Pause className="h-3 w-3" />
-              ) : (
-                <Play className="h-3 w-3 ml-0.5" />
-              )}
+              {isPlaying ? <Pause className="h-3 w-3" /> : <Play className="h-3 w-3 ml-0.5" />}
             </button>
 
-            <div className="ml-3">
-              <div className={cn("text-xs font-medium truncate", audioError ? "text-red-400" : "text-retro-display")}>
-                {getTrackName()}
-              </div>
+            <div className="ml-3 flex items-center">
+              <div className="text-xs font-medium text-retro-display truncate">{getAudioSourceName()}</div>
+              {audioError && (
+                <div className="ml-2 text-amber-400 flex items-center" title={audioError}>
+                  <AlertTriangle className="h-3 w-3" />
+                  {!isRetrying && (
+                    <button
+                      onClick={retryAudio}
+                      className="ml-2 text-[9px] text-retro-teal hover:text-retro-teal/80 transition-colors flex items-center"
+                      title="Retry loading audio"
+                    >
+                      {isRetrying ? (
+                        <>
+                          <RotateCw className="h-2 w-2 mr-1 animate-spin" />
+                          Retrying...
+                        </>
+                      ) : (
+                        "Retry"
+                      )}
+                    </button>
+                  )}
+                </div>
+              )}
             </div>
           </div>
 
@@ -531,27 +721,17 @@ export function AudioPlayer({
             {isMobile ? (
               /* Simple progress bar for mobile */
               <div
-                className={cn(
-                  "relative w-full h-1 bg-retro-display/20 rounded-full",
-                  audioError ? "opacity-50 cursor-not-allowed" : "cursor-pointer",
-                )}
-                onClick={audioError ? undefined : handleProgressBarClick}
+                className="relative w-full h-1 bg-retro-display/20 rounded-full cursor-pointer"
+                onClick={handleProgressBarClick}
               >
                 <div
-                  className={cn(
-                    "absolute top-0 left-0 h-full rounded-full",
-                    audioError ? "bg-red-400/60" : "bg-retro-display/60",
-                  )}
+                  className="absolute top-0 left-0 h-full bg-retro-display/60 rounded-full"
                   style={{ width: `${playbackProgress}%` }}
                 ></div>
               </div>
             ) : (
               /* Waveform for desktop */
-              <div
-                ref={waveformRef}
-                className={cn("relative w-full h-6", audioError ? "opacity-50 cursor-not-allowed" : "cursor-pointer")}
-                onClick={audioError ? undefined : handleWaveformClick}
-              >
+              <div ref={waveformRef} className="relative w-full h-6 cursor-pointer" onClick={handleWaveformClick}>
                 {/* Waveform bars container - Only render when data is loaded */}
                 <div
                   className={cn(
@@ -572,17 +752,11 @@ export function AudioPlayer({
                         <div
                           className={cn(
                             "w-full transition-all duration-300",
-                            audioError
-                              ? isPlayed
-                                ? "bg-red-400/80"
-                                : "bg-red-400/30"
-                              : isPlayed
-                                ? "bg-retro-display/80"
-                                : "bg-retro-display/30",
+                            isPlayed ? "bg-retro-display/80" : "bg-retro-display/30",
                           )}
                           style={{
                             height: `${height}px`,
-                            boxShadow: isPlayed && !audioError ? "0 0 4px rgba(232, 227, 199, 0.7)" : "none",
+                            boxShadow: isPlayed ? "0 0 4px rgba(232, 227, 199, 0.7)" : "none",
                           }}
                         />
                       </div>
@@ -591,7 +765,7 @@ export function AudioPlayer({
                 </div>
 
                 {/* Playhead - Only shown when waveform is loaded */}
-                {isWaveformLoaded && playbackProgress > 0 && !audioError && (
+                {isWaveformLoaded && playbackProgress > 0 && (
                   <div
                     className="absolute top-0 bottom-0 w-[2px] bg-retro-teal/40 z-10 transition-all duration-300"
                     style={{
@@ -628,7 +802,6 @@ export function AudioPlayer({
                     : "bg-transparent text-retro-display/60 hover:text-retro-display/80",
                 )}
                 aria-label={isLooping ? "Disable loop" : "Enable loop"}
-                disabled={!!audioError}
               >
                 <Repeat className="h-3 w-3" />
               </button>
@@ -717,8 +890,6 @@ export function AudioPlayer({
           </div>
         </div>
       </div>
-
-      <audio ref={audioRef} src={currentAudioSrc} preload="auto" crossOrigin="anonymous" />
     </div>
   )
 }
