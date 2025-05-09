@@ -70,7 +70,8 @@ export function AudioPlayer({ audioSrc = "https://media.boldthin.gs/F4LC0N.mp3",
   const generatePlaceholderWaveform = () => {
     // Create a visually interesting pattern that resembles audio
     const dataPoints: number[] = []
-    const samples = 80
+    // Reduce the number of samples on mobile for better performance and visibility
+    const samples = isMobile ? 40 : 80
 
     // Create a more interesting pattern with some randomness but also structure
     for (let i = 0; i < samples; i++) {
@@ -90,11 +91,13 @@ export function AudioPlayer({ audioSrc = "https://media.boldthin.gs/F4LC0N.mp3",
     }
 
     setWaveformData(dataPoints)
+    console.log(`Generated ${dataPoints.length} waveform data points for ${isMobile ? "mobile" : "desktop"}`)
 
     // Set waveform as loaded with a slight delay to ensure smooth transition
     setTimeout(() => {
       if (mountedRef.current) {
         setIsWaveformLoaded(true)
+        console.log("Waveform marked as loaded")
       }
     }, 100)
   }
@@ -103,7 +106,6 @@ export function AudioPlayer({ audioSrc = "https://media.boldthin.gs/F4LC0N.mp3",
   useEffect(() => {
     // Generate placeholder waveform immediately
     generatePlaceholderWaveform()
-    console.log("Waveform data generated:", waveformData.length, "points")
 
     // Create a new audio element
     const audio = new Audio(audioSrc)
@@ -127,7 +129,7 @@ export function AudioPlayer({ audioSrc = "https://media.boldthin.gs/F4LC0N.mp3",
       audio.removeEventListener("timeupdate", handleTimeUpdate)
       audio.removeEventListener("ended", handleEnded)
     }
-  }, [audioSrc])
+  }, [audioSrc, isMobile])
 
   // Event handlers
   const handleLoadedMetadata = () => {
@@ -370,6 +372,49 @@ export function AudioPlayer({ audioSrc = "https://media.boldthin.gs/F4LC0N.mp3",
     }
   }, [isVolumeVisible])
 
+  // Render the waveform bars
+  const renderWaveformBars = () => {
+    return waveformData.map((value, index) => {
+      // Ensure minimum height is visible on all devices
+      // Increase minimum height for mobile to ensure visibility
+      const minHeight = isMobile ? 4 : 2
+      // Increase scaling factor for mobile
+      const scaleFactor = isMobile ? 14 : 18
+      const height = Math.max(minHeight, value * scaleFactor)
+      const isPlayed = (index / waveformData.length) * 100 <= playbackProgress
+
+      return (
+        <div
+          key={index}
+          className={cn("h-full flex items-center", flickerState ? "waveform-glow" : "")}
+          style={{
+            flex: 1,
+            // Increase spacing between bars on mobile
+            marginLeft: isMobile ? "1px" : "0.5px",
+            marginRight: isMobile ? "1px" : "0.5px",
+          }}
+        >
+          <div
+            className={cn(
+              "w-full transition-all duration-300",
+              // Increase opacity for better visibility on mobile
+              isPlayed ? "bg-retro-display" : "bg-retro-display/40",
+            )}
+            style={{
+              height: `${height}px`,
+              // Add stronger glow effect for played bars on mobile
+              boxShadow: isPlayed
+                ? isMobile
+                  ? "0 0 6px rgba(232, 227, 199, 0.9)"
+                  : "0 0 4px rgba(232, 227, 199, 0.7)"
+                : "none",
+            }}
+          />
+        </div>
+      )
+    })
+  }
+
   return (
     <div
       className={cn(
@@ -402,55 +447,40 @@ export function AudioPlayer({ audioSrc = "https://media.boldthin.gs/F4LC0N.mp3",
             </div>
           </div>
 
-          {/* Middle: Waveform on desktop, Progress bar on mobile */}
+          {/* Middle: Waveform */}
           <div className="flex-1 mx-4 h-full flex items-center">
-            {/* Middle: Waveform for all devices */}
-            <div className="flex-1 mx-4 h-full flex items-center">
-              <div ref={waveformRef} className="relative w-full h-6 cursor-pointer" onClick={handleWaveformClick}>
-                {/* Waveform bars container - Only render when data is loaded */}
-                <div
-                  className={cn(
-                    "absolute inset-0 flex items-center transition-opacity duration-700",
-                    isWaveformLoaded ? "opacity-100" : "opacity-0",
-                  )}
-                >
-                  {waveformData.map((value, index) => {
-                    // Ensure minimum height is visible on all devices
-                    const height = Math.max(isMobile ? 3 : 2, value * (isMobile ? 12 : 18))
-                    const isPlayed = (index / waveformData.length) * 100 <= playbackProgress
+            {/* Simplified waveform container structure */}
+            <div
+              ref={waveformRef}
+              className="relative w-full h-6 cursor-pointer"
+              onClick={handleWaveformClick}
+              style={{ zIndex: 5 }} // Ensure waveform is above any potential overlapping elements
+            >
+              {/* Background for debugging - helps identify if container is rendering */}
+              <div className="absolute inset-0 bg-black/10 z-0"></div>
 
-                    return (
-                      <div
-                        key={index}
-                        className={cn("mx-[0.5px] h-full flex items-center", flickerState ? "waveform-glow" : "")}
-                        style={{ flex: 1 }}
-                      >
-                        <div
-                          className={cn(
-                            "w-full transition-all duration-300",
-                            isPlayed ? "bg-retro-display/80" : "bg-retro-display/30",
-                          )}
-                          style={{
-                            height: `${height}px`,
-                            boxShadow: isPlayed ? "0 0 4px rgba(232, 227, 199, 0.7)" : "none",
-                          }}
-                        />
-                      </div>
-                    )
-                  })}
-                </div>
-
-                {/* Playhead - Only shown when waveform is loaded */}
-                {isWaveformLoaded && playbackProgress > 0 && (
-                  <div
-                    className="absolute top-0 bottom-0 w-[2px] bg-retro-teal/40 z-10 transition-all duration-300"
-                    style={{
-                      left: `${playbackProgress}%`,
-                      boxShadow: "0 0 4px rgba(94, 191, 181, 0.3)",
-                    }}
-                  />
+              {/* Waveform bars container with simplified structure */}
+              <div
+                className={cn(
+                  "absolute inset-0 flex items-center z-1",
+                  // Remove transition to debug if that's causing issues
+                  // isWaveformLoaded ? "opacity-100" : "opacity-0",
                 )}
+                style={{ opacity: 1 }} // Force opacity to 1 for debugging
+              >
+                {renderWaveformBars()}
               </div>
+
+              {/* Playhead */}
+              {playbackProgress > 0 && (
+                <div
+                  className="absolute top-0 bottom-0 w-[2px] bg-retro-teal/40 z-10"
+                  style={{
+                    left: `${playbackProgress}%`,
+                    boxShadow: "0 0 4px rgba(94, 191, 181, 0.3)",
+                  }}
+                />
+              )}
             </div>
           </div>
 
