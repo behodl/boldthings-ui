@@ -281,12 +281,9 @@ export function LoginModal({ isOpen, onClose }: LoginModalProps) {
           <div className="p-5">
             <div className={cn("transition-opacity duration-300", isAnimating ? "opacity-0" : "opacity-100")}>
               {!isEmailSubmitted ? (
-                <div className="animate-fade-in">
+                <div className="animate-fade-in pt-4">
                   <form onSubmit={handleEmailSubmit}>
                     <div className="mb-1">
-                      <label htmlFor="email" className="block font-space-mono text-xs text-retro-display/80 mb-1">
-                        Email
-                      </label>
                       <input
                         ref={emailInputRef}
                         type="email"

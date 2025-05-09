@@ -25,7 +25,6 @@ export function AudioPlayer({ audioSrc = "https://media.boldthin.gs/F4LC0N.mp3",
   const [isLooping, setIsLooping] = useState(false)
   const [isLoaded, setIsLoaded] = useState(false)
   const [isVisible, setIsVisible] = useState(false)
-  const [forceUpdateFlag, setForceUpdateFlag] = useState(false)
 
   // UI state
   const [isVolumeVisible, setIsVolumeVisible] = useState(false)
@@ -215,8 +214,7 @@ export function AudioPlayer({ audioSrc = "https://media.boldthin.gs/F4LC0N.mp3",
     const triggerFlicker = () => {
       if (!mountedRef.current) return
 
-      // Increased chance of flickering for more unstable feel
-      if (Math.random() < 0.3) {
+      if (Math.random() < 0.25) {
         setFlickerState(true)
 
         const flickerDuration = 50 + Math.random() * 150
@@ -227,8 +225,7 @@ export function AudioPlayer({ audioSrc = "https://media.boldthin.gs/F4LC0N.mp3",
         }, flickerDuration)
       }
 
-      // More frequent checks for a more unstable feel
-      const nextFlicker = 200 + Math.random() * 1000
+      const nextFlicker = 300 + Math.random() * 1200
       flickerTimerRef.current = setTimeout(triggerFlicker, nextFlicker)
     }
 
@@ -252,25 +249,6 @@ export function AudioPlayer({ audioSrc = "https://media.boldthin.gs/F4LC0N.mp3",
     if (!waveform || !audioRef.current) return
 
     const rect = waveform.getBoundingClientRect()
-    const clickPosition = (e.clientX - rect.left) / rect.width
-
-    // Set new time
-    const newTime = clickPosition * duration
-    audioRef.current.currentTime = newTime
-    setCurrentTime(newTime)
-
-    // Start playing if paused
-    if (!isPlaying) {
-      setIsPlaying(true)
-    }
-  }
-
-  // Handle progress bar click (for mobile)
-  const handleProgressBarClick = (e: React.MouseEvent<HTMLDivElement>) => {
-    const progressBar = e.currentTarget
-    if (!progressBar || !audioRef.current) return
-
-    const rect = progressBar.getBoundingClientRect()
     const clickPosition = (e.clientX - rect.left) / rect.width
 
     // Set new time
@@ -391,20 +369,6 @@ export function AudioPlayer({ audioSrc = "https://media.boldthin.gs/F4LC0N.mp3",
     }
   }, [isVolumeVisible])
 
-  // Force occasional re-renders to trigger random glitch effects
-  useEffect(() => {
-    if (!isVisible) return
-
-    const glitchInterval = setInterval(() => {
-      if (mountedRef.current && Math.random() < 0.2) {
-        // This forces a re-render by toggling the state
-        setForceUpdateFlag((prev) => !prev)
-      }
-    }, 800)
-
-    return () => clearInterval(glitchInterval)
-  }, [isVisible])
-
   return (
     <div
       className={cn(
@@ -433,34 +397,14 @@ export function AudioPlayer({ audioSrc = "https://media.boldthin.gs/F4LC0N.mp3",
             </button>
 
             <div className="ml-3 flex items-center">
-              <div
-                className={cn(
-                  "font-space-mono text-xs text-retro-display/90 truncate",
-                  flickerState ? "glitch-flicker" : "",
-                  Math.random() < 0.01 ? "glitch-horizontal" : "",
-                  Math.random() < 0.005 ? "glitch-color" : "",
-                )}
-              >
-                F4LC0N
-              </div>
+              <div className="text-xs font-medium text-retro-display truncate">F4LC0N</div>
             </div>
           </div>
 
           {/* Middle: Waveform on desktop, Progress bar on mobile */}
           <div className="flex-1 mx-4 h-full flex items-center">
-            {isMobile ? (
-              /* Simple progress bar for mobile */
-              <div
-                className="relative w-full h-1 bg-retro-display/20 rounded-full cursor-pointer"
-                onClick={handleProgressBarClick}
-              >
-                <div
-                  className="absolute top-0 left-0 h-full bg-retro-display/60 rounded-full"
-                  style={{ width: `${playbackProgress}%` }}
-                ></div>
-              </div>
-            ) : (
-              /* Waveform for desktop */
+            {/* Middle: Waveform for all devices */}
+            <div className="flex-1 mx-4 h-full flex items-center">
               <div ref={waveformRef} className="relative w-full h-6 cursor-pointer" onClick={handleWaveformClick}>
                 {/* Waveform bars container - Only render when data is loaded */}
                 <div
@@ -470,7 +414,7 @@ export function AudioPlayer({ audioSrc = "https://media.boldthin.gs/F4LC0N.mp3",
                   )}
                 >
                   {waveformData.map((value, index) => {
-                    const height = Math.max(2, value * 18)
+                    const height = Math.max(2, value * (isMobile ? 10 : 18)) // Smaller height on mobile
                     const isPlayed = (index / waveformData.length) * 100 <= playbackProgress
 
                     return (
@@ -505,20 +449,13 @@ export function AudioPlayer({ audioSrc = "https://media.boldthin.gs/F4LC0N.mp3",
                   />
                 )}
               </div>
-            )}
+            </div>
           </div>
 
           {/* Right: Time and controls - Simplified on mobile */}
           <div className={cn("flex items-center justify-end", isMobile ? "w-1/3 space-x-2" : "w-1/4 space-x-3")}>
-            {/* Time display - Always visible with glitch effects */}
-            <div
-              className={cn(
-                "font-space-mono text-[10px] text-retro-display/80",
-                flickerState ? "glitch-flicker" : "",
-                Math.random() < 0.008 ? "glitch-horizontal" : "",
-                Math.random() < 0.004 ? "glitch-color" : "",
-              )}
-            >
+            {/* Time display - Always visible */}
+            <div className="font-space-mono text-[10px] text-retro-display/80">
               <span>{formatTime(currentTime)}</span>
               {!isMobile && (
                 <>
