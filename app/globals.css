@@ -989,20 +989,27 @@ input[type="range"]::-moz-range-thumb:hover {
   background: #e8e3c7;
 }
 
+/* Update the audio player animation to have a longer duration and a smoother entrance */
+
 /* Audio player container animation */
 @keyframes fadeInAudioPlayer {
-  from {
+  0% {
     opacity: 0;
     transform: translateY(10px);
   }
-  to {
+  20% {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  100% {
     opacity: 1;
     transform: translateY(0);
   }
 }
 
 .audio-player-enter {
-  animation: fadeInAudioPlayer 0.5s ease forwards;
+  animation: fadeInAudioPlayer 1.5s ease forwards;
+  animation-delay: 2s; /* Add a delay to the animation start */
 }
 
 /* Waveform glow effect */

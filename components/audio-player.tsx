@@ -49,12 +49,12 @@ export function AudioPlayer({ audioSrc = "https://media.boldthin.gs/F4LC0N.mp3",
     // Set up flicker effect
     setupFlickerEffect()
 
-    // Fade in the player after a short delay
+    // Fade in the player after a longer delay (after logo animation completes)
     const fadeInTimer = setTimeout(() => {
       if (mountedRef.current) {
         setIsVisible(true)
       }
-    }, 500)
+    }, 2500) // Increased from 500ms to 2500ms to appear after logo animation
 
     return () => {
       mountedRef.current = false
